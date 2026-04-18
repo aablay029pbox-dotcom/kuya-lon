@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login – COSTruct</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
-
 <style>
 :root{--g900:#052016;--g800:#0a3d2b;--g600:#0f5a3f;--g400:#1a8a5e;--g200:#a8dfc7;--g100:#d4f0e3;--g50:#edf8f3;--ink:#111816;--ink2:#3a4a42;--ink3:#6b7a72;--bg:#f2f5f3;--border:#dde8e2;--red:#dc3545}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -49,6 +47,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
 .field input,.field select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:15px;color:var(--ink);background:#fff;transition:.2s;outline:none}
 .field input:focus,.field select:focus{border-color:var(--g600);box-shadow:0 0 0 3px rgba(15,90,63,0.1)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 .supplier-fields{border:1.5px solid var(--border);border-radius:12px;padding:16px;background:var(--bg);margin-bottom:16px}
 .supplier-fields-label{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px}
 
@@ -60,240 +59,324 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
 
 @media(max-width:680px){
   .wrap{grid-template-columns:1fr}
-  .left{padding:36px 28px}
+  .left{padding:36px 28px;min-height:auto}
+  .left-mid,.left-foot{display:none}
   .right{padding:36px 28px}
   .field-row{grid-template-columns:1fr}
+  .logo{font-size:22px}
 }
 </style>
 </head>
-
 <body>
-
 <div class="wrap">
+  <div class="left">
+    <div class="left-bg"></div>
+    <div class="left-bg2"></div>
+    <div class="logo">CO<span>S</span>Truct</div>
+    <div class="left-mid">
+      <h2>Plan Fast.<br>Build<em>Smart.</em></h2>
+      <h2>Save More.</h2>
+      <p>Real-time material quantity and cost estimation for construction projects in the Partido Area.</p>
+    </div>
+    <div class="left-foot">
+      <a href="index.html">← Back to homepage</a>
+    </div>
+  </div>
 
-<!-- LEFT -->
-<div class="left">
-<div class="left-bg"></div>
-<div class="left-bg2"></div>
+  <div class="right">
+    <!-- LOGIN PANEL -->
+    <div class="form-panel active" id="panelLogin">
+      <h2 class="form-title">Welcome back</h2>
+      <p class="form-sub">Sign in to continue to COSTruct</p>
+      <div class="alert" id="loginAlert"></div>
+      <form onsubmit="doLogin(event)">
+        <div class="role-row">
+          <div class="role-opt">
+            <input type="radio" id="lrBuyer" name="loginRole" value="buyer" checked>
+            <label for="lrBuyer">Buyer</label>
+          </div>
+          <div class="role-opt">
+            <input type="radio" id="lrSupplier" name="loginRole" value="supplier">
+            <label for="lrSupplier">Supplier</label>
+          </div>
+        </div>
+        <div class="field"><label>Email Address</label><input type="email" id="loginEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPw" required placeholder="••••••••"></div>
+        <button type="submit" class="submit-btn">Sign In</button>
+        <p class="switch-txt">No account yet? <a href="#" onclick="switchPanel('panelReg')">Register here</a></p>
+      </form>
+    </div>
 
-<div class="logo">CO<span>S</span>Truct</div>
-
-<div class="left-mid">
-<h2>Plan Fast.<br>Build <em>Smart.</em></h2>
-<h2>Save More.</h2>
-<p>Real-time material quantity and cost estimation for construction projects in the Partido Area.</p>
-</div>
-
-<div class="left-foot">
-<a href="index.html">← Back to homepage</a>
-</div>
-</div>
-
-<!-- RIGHT -->
-<div class="right">
-
-<!-- LOGIN -->
-<div class="form-panel active" id="panelLogin">
-<h2 class="form-title">Welcome back</h2>
-<p class="form-sub">Sign in to continue to COSTruct</p>
-
-<div class="alert" id="loginAlert"></div>
-
-<form onsubmit="doLogin(event)">
-
-<div class="role-row">
-<div class="role-opt">
-<input type="radio" id="lrBuyer" name="loginRole" value="buyer" checked>
-<label for="lrBuyer">Buyer</label>
-</div>
-<div class="role-opt">
-<input type="radio" id="lrSupplier" name="loginRole" value="supplier">
-<label for="lrSupplier">Supplier</label>
-</div>
-</div>
-
-<div class="field">
-<input type="email" id="loginEmail" required placeholder="you@example.com">
-</div>
-
-<div class="field">
-<input type="password" id="loginPw" required placeholder="••••••••">
-</div>
-
-<button class="submit-btn">Sign In</button>
-
-<p class="switch-txt">No account yet? <a onclick="switchPanel('panelReg')">Register here</a></p>
-
-</form>
-</div>
-
-<!-- REGISTER -->
-<div class="form-panel" id="panelReg">
-<h2 class="form-title">Create account</h2>
-<p class="form-sub">Choose your role to get started</p>
-
-<div class="alert" id="regAlert"></div>
-
-<form onsubmit="doRegister(event)">
-
-<div class="role-row">
-<div class="role-opt">
-<input type="radio" id="rrBuyer" name="role" value="buyer" checked onchange="toggleSupFields()">
-<label for="rrBuyer">Buyer</label>
-</div>
-<div class="role-opt">
-<input type="radio" id="rrSupplier" name="role" value="supplier" onchange="toggleSupFields()">
-<label for="rrSupplier">Supplier</label>
-</div>
-</div>
-
-<div class="field"><input id="regName" placeholder="Full Name" required></div>
-<div class="field"><input id="regEmail" placeholder="Email" required></div>
-<div class="field"><input id="regContact" placeholder="Contact" required></div>
-<div class="field"><input id="regAddress" placeholder="Address" required></div>
-
-<div class="field"><input type="password" id="regPw" placeholder="Password" required></div>
-<div class="field"><input type="password" id="regPwConfirm" placeholder="Confirm Password" required></div>
-
-<div id="supFields" style="display:none">
-<div class="supplier-fields">
-<div class="supplier-fields-label">Store Info</div>
-<div class="field"><input id="storeName" placeholder="Business Name"></div>
-</div>
-</div>
-
-<button class="submit-btn">Create Account</button>
-
-<p class="switch-txt">Already have an account? <a onclick="switchPanel('panelLogin')">Sign in</a></p>
-
-</form>
-</div>
-
-</div>
+    <!-- REGISTER PANEL -->
+    <div class="form-panel" id="panelReg">
+      <h2 class="form-title">Create account</h2>
+      <p class="form-sub">Choose your role to get started</p>
+      <div class="alert" id="regAlert"></div>
+      <form onsubmit="doRegister(event)">
+        <div class="role-row">
+          <div class="role-opt">
+            <input type="radio" id="rrBuyer" name="role" value="buyer" checked onchange="toggleSupFields()">
+            <label for="rrBuyer">Buyer</label>
+          </div>
+          <div class="role-opt">
+            <input type="radio" id="rrSupplier" name="role" value="supplier" onchange="toggleSupFields()">
+            <label for="rrSupplier">Supplier</label>
+          </div>
+        </div>
+        <div class="field"><label>Full Name</label><input type="text" id="regName" required placeholder="Juan dela Cruz"></div>
+        <div class="field"><label>Email Address</label><input type="email" id="regEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Contact Number</label><input type="tel" id="regContact" required placeholder="e.g. 09XX XXX XXXX"></div>
+        <div class="field"><label>House Address</label><input type="text" id="regAddress" required placeholder="House No., Street, Barangay, Municipality"></div>
+        <div class="field-row">
+          <div class="field"><label>Password</label><input type="password" id="regPw" required placeholder="min 6 characters"></div>
+          <div class="field"><label>Confirm Password</label><input type="password" id="regPwConfirm" required placeholder="re-enter password"></div>
+        </div>
+        <div id="supFields" style="display:none">
+          <div class="supplier-fields">
+            <div class="supplier-fields-label">Store / Business Info</div>
+            <div class="field"><label>Business Name</label><input type="text" id="storeName" placeholder="e.g. Juan's Hardware"></div>
+            <div class="field-row">
+              <div class="field"><label>Category</label>
+                <select id="storeCategory">
+                  <option value="construction">General Construction</option>
+                  <option value="hardware">Hardware</option>
+                  <option value="lumber">Lumber & Wood</option>
+                  <option value="cement">Cement & Aggregates</option>
+                </select>
+              </div>
+              <div class="field"><label>Location</label>
+                <select id="storeLoc">
+                  <option value="Tigaon">Tigaon</option>
+                  <option value="Goa">Goa</option>
+                  <option value="San Jose">San Jose</option>
+                  <option value="Lagonoy">Lagonoy</option>
+                  <option value="Sagnay">Sagnay</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn">Create Account</button>
+        <p class="switch-txt">Already have an account? <a href="#" onclick="switchPanel('panelLogin')">Sign in</a></p>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { supabase } from './supabase-client.js';
 
-function alertBox(id,msg,type){
-const el=document.getElementById(id);
-el.textContent=msg;
-el.className=`alert ${type}`;
-el.style.display='block';
-setTimeout(()=>el.style.display='none',4000);
+const PENDING_KEY = 'pending_registration_v1';
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'alert ' + type;
+  el.style.display = 'block';
+  setTimeout(() => (el.style.display = 'none'), 6000);
 }
 
-function switchPanel(id){
-document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
+function switchPanel(id) {
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-function toggleSupFields(){
-const role=document.querySelector('input[name="role"]:checked').value;
-document.getElementById('supFields').style.display =
-role==='supplier' ? 'block':'none';
+function toggleSupFields() {
+  const role = document.querySelector('input[name="role"]:checked').value;
+  document.getElementById('supFields').style.display = role === 'supplier' ? 'block' : 'none';
 }
 
-// LOGIN
-async function doLogin(e){
-e.preventDefault();
+async function ensureProfileAndSupplier(user, pending) {
+  // If you have RLS enabled, you MUST have an authenticated session for these inserts.
+  // This function runs only after a successful login.
 
-const email=document.getElementById('loginEmail').value;
-const pw=document.getElementById('loginPw').value;
-const expected=document.querySelector('input[name="loginRole"]:checked').value;
+  // Check if profile already exists
+  const { data: existing, error: existingErr } = await supabase
+    .from('profiles')
+    .select('id, role')
+    .eq('id', user.id)
+    .maybeSingle();
 
-const {data,error}=await supabase.auth.signInWithPassword({email,password:pw});
-if(error) return alertBox('loginAlert',error.message,'error');
+  if (existingErr) {
+    console.error('profiles select:', existingErr);
+    // don't block login; just report
+    return { ok: false, message: 'Logged in, but failed to check profile table.' };
+  }
 
-const {data:profile}=await supabase
-.from('profiles')
-.select('role')
-.eq('id',data.user.id)
-.maybeSingle();
+  if (!existing) {
+    const { error: profileErr } = await supabase.from('profiles').insert({
+      id: user.id,
+      name: pending?.name ?? user.user_metadata?.name ?? '',
+      role: pending?.role ?? user.user_metadata?.role ?? 'buyer',
+      contact: pending?.contact ?? '',
+      address: pending?.address ?? ''
+    });
 
-const role=profile?.role || data.user.user_metadata?.role || 'buyer';
+    if (profileErr) {
+      console.error('profile insert:', profileErr);
+      return { ok: false, message: 'Logged in, but failed to save profile to database.' };
+    }
+  }
 
-if(role!==expected){
-await supabase.auth.signOut();
-return alertBox('loginAlert','Role mismatch','error');
+  // Create supplier row if needed
+  const role = (pending?.role ?? existing?.role ?? user.user_metadata?.role ?? 'buyer');
+  if (role === 'supplier' && pending) {
+    const { data: supplierExisting } = await supabase
+      .from('suppliers')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!supplierExisting) {
+      const { error: supErr } = await supabase.from('suppliers').insert({
+        user_id: user.id,
+        email: pending.email,
+        name: pending.storeName,
+        owner_name: pending.name,
+        category: pending.cat,
+        location: pending.loc,
+        contact: pending.contact,
+        address: pending.address,
+        since: new Date().getFullYear().toString(),
+        delivery: 'Available',
+        rating: 0
+      });
+
+      if (supErr) {
+        console.error('supplier insert:', supErr);
+        return { ok: false, message: 'Logged in, but failed to save supplier info to database.' };
+      }
+    }
+  }
+
+  return { ok: true };
 }
 
-await ensureProfile(data.user);
+// ---------- LOGIN ----------
+async function doLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const expectedRole = document.querySelector('input[name="loginRole"]:checked').value;
 
-alertBox('loginAlert','Login successful','success');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    showAlert('loginAlert', error.message || 'Invalid email or password.', 'error');
+    return;
+  }
 
-setTimeout(()=>{
-location.href=role==='supplier'?'admin.html':'index.html';
-},1000);
+  // Check role (from profiles if exists, else from metadata)
+  const { data: profile, error: profErr } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (profErr) console.error('profiles role select:', profErr);
+
+  const actualRole = profile?.role || data.user.user_metadata?.role || 'buyer';
+  if (actualRole !== expectedRole) {
+    await supabase.auth.signOut();
+    showAlert('loginAlert', `This account is registered as a ${actualRole}, not a ${expectedRole}.`, 'error');
+    return;
+  }
+
+  // If user registered while email confirmation was ON, we saved details locally.
+  // After they confirm email and log in, we can now write to your DB tables.
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch { pending = null; }
+
+  if (pending && pending.email?.toLowerCase() === email.toLowerCase()) {
+    const res = await ensureProfileAndSupplier(data.user, pending);
+    if (!res.ok) showAlert('loginAlert', res.message, 'error');
+    localStorage.removeItem(PENDING_KEY);
+  }
+
+  showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
+  setTimeout(() => {
+    location.href = actualRole === 'supplier' ? 'admin.html' : 'index.html';
+  }, 1200);
 }
 
-// REGISTER (NO LOCALSTORAGE, USE user_metadata)
-async function doRegister(e){
-e.preventDefault();
+// ---------- REGISTER ----------
+async function doRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const contact = document.getElementById('regContact').value.trim();
+  const address = document.getElementById('regAddress').value.trim();
+  const pw = document.getElementById('regPw').value;
+  const pwConfirm = document.getElementById('regPwConfirm').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
 
-const name=document.getElementById('regName').value;
-const email=document.getElementById('regEmail').value;
-const contact=document.getElementById('regContact').value;
-const address=document.getElementById('regAddress').value;
-const pw=document.getElementById('regPw').value;
-const pw2=document.getElementById('regPwConfirm').value;
-const role=document.querySelector('input[name="role"]:checked').value;
+  if (!name || !email || !contact || !address || !pw || !pwConfirm)
+    return showAlert('regAlert', 'Please fill all fields.', 'error');
+  if (pw.length < 6)
+    return showAlert('regAlert', 'Password must be at least 6 characters.', 'error');
+  if (pw !== pwConfirm)
+    return showAlert('regAlert', 'Passwords do not match. Please try again.', 'error');
 
-if(pw!==pw2)
-return alertBox('regAlert','Password mismatch','error');
+  let storeName = null, cat = null, loc = null;
+  if (role === 'supplier') {
+    storeName = document.getElementById('storeName').value.trim();
+    cat = document.getElementById('storeCategory').value;
+    loc = document.getElementById('storeLoc').value;
+    if (!storeName) return showAlert('regAlert', 'Please enter your business name.', 'error');
+  }
 
-const storeName=document.getElementById('storeName')?.value || null;
+  // Save everything locally so we can insert to DB AFTER login (important if Email Confirmation is ON).
+  const pending = { name, email, contact, address, role, storeName, cat, loc };
+  localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
 
-const {error}=await supabase.auth.signUp({
-email,
-password:pw,
-options:{
-data:{name,role,contact,address,storeName}
+  // 1) Sign up with Supabase Auth
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password: pw,
+    options: { data: { name, role } }
+  });
+
+  if (signUpError) {
+    return showAlert('regAlert', signUpError.message || 'Registration failed.', 'error');
+  }
+
+  // If your project has Email Confirmation enabled, session will be null here.
+  // In that case, DO NOT insert into tables (RLS will block). Ask user to confirm email and log in.
+  if (!signUpData.session) {
+    showAlert(
+      'regAlert',
+      'Account created! Please check your email to confirm your account, then come back and log in. (Your details will be saved after login.)',
+      'success'
+    );
+    setTimeout(() => {
+      switchPanel('panelLogin');
+      document.getElementById('loginEmail').value = email;
+      showAlert('loginAlert', 'After confirming your email, please sign in.', 'success');
+    }, 2500);
+    return;
+  }
+
+  // If Email Confirmation is OFF, we already have a session and can write to DB now.
+  const user = signUpData.user;
+  const res = await ensureProfileAndSupplier(user, pending);
+  if (!res.ok) {
+    showAlert('regAlert', res.message || 'Registration succeeded, but database insert failed.', 'error');
+    return;
+  }
+
+  localStorage.removeItem(PENDING_KEY);
+  showAlert('regAlert', `Account created for ${name}! Redirecting to login...`, 'success');
+  setTimeout(() => {
+    switchPanel('panelLogin');
+    document.getElementById('loginEmail').value = email;
+    showAlert('loginAlert', 'Registration successful. Please log in.', 'success');
+  }, 2000);
 }
-});
 
-if(error) return alertBox('regAlert',error.message,'error');
-
-alertBox('regAlert','Check your email to confirm account','success');
-switchPanel('panelLogin');
-}
-
-// PROFILE CREATION USING METADATA ONLY
-async function ensureProfile(user){
-
-const meta=user.user_metadata;
-
-const {data}=await supabase
-.from('profiles')
-.select('id')
-.eq('id',user.id)
-.maybeSingle();
-
-if(!data){
-await supabase.from('profiles').insert({
-id:user.id,
-name:meta?.name,
-role:meta?.role,
-contact:meta?.contact,
-address:meta?.address
-});
-}
-
-if(meta?.role==='supplier'){
-await supabase.from('suppliers').upsert({
-user_id:user.id,
-email:user.email,
-name:meta?.storeName,
-owner_name:meta?.name
-});
-}
-}
-
-window.switchPanel=switchPanel;
-window.toggleSupFields=toggleSupFields;
-window.doLogin=doLogin;
-window.doRegister=doRegister;
-
+// Expose to inline handlers
+window.switchPanel = switchPanel;
+window.toggleSupFields = toggleSupFields;
+window.doLogin = doLogin;
+window.doRegister = doRegister;
 </script>
 </body>
 </html>
