@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supplier Dashboard – COSTruct</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{--g900:#052016;--g800:#0a3d2b;--g700:#0d4f37;--g600:#0f5a3f;--g400:#1a8a5e;--g200:#a8dfc7;--g100:#d4f0e3;--g50:#edf8f3;--ink:#111816;--ink2:#3a4a42;--ink3:#6b7a72;--bg:#f2f5f3;--card:#fff;--border:#dde8e2;--red:#dc3545;--amber:#d97706;--shadow:0 4px 20px rgba(10,61,43,0.09);--r:12px;--r-lg:18px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink)}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(5,32,22,0.96);backdrop-filter:blur(12px);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.logo{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#fff}
+.logo span{color:var(--g200)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-user{display:flex;align-items:center;gap:10px;color:#fff;font-size:14px}
+.user-avatar{width:34px;height:34px;border-radius:9px;background:var(--g600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.burger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:5px}
+.burger span{display:block;width:22px;height:2px;background:rgba(255,255,255,0.8);border-radius:2px}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;padding-top:64px}
+
+/* SIDEBAR NAV */
+.side-nav{background:var(--card);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:64px;left:0;width:240px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column}
+.side-nav-inner{flex:1}
+.nav-sec{padding:6px 18px;font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--ink3);text-transform:uppercase;margin-top:10px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 18px;font-size:14px;font-weight:500;color:var(--ink2);cursor:pointer;border-left:3px solid transparent;transition:.2s;text-decoration:none}
+.nav-item:hover{background:var(--g50);border-left-color:var(--g200);color:var(--g800)}
+.nav-item.active{background:var(--g50);border-left-color:var(--g600);color:var(--g800);font-weight:700}
+.nav-item .ico{width:20px;text-align:center;font-size:15px}
+.side-foot{padding:16px 18px;border-top:1px solid var(--border)}
+.logout-btn{width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.logout-btn:hover{opacity:.88}
+
+/* MAIN CONTENT */
+.main{margin-left:240px;padding:28px 28px 60px}
+.page-header{margin-bottom:28px}
+.page-header h1{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--g900);letter-spacing:-.5px}
+.page-header p{font-size:14px;color:var(--ink3);margin-top:4px}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--card);border-radius:var(--r-lg);padding:20px;border:1px solid var(--border)}
+.stat-label{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px}
+.stat-num{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--g800)}
+.stat-sub{font-size:12px;color:var(--ink3);margin-top:4px}
+.stat-card.accent{background:var(--g800)}
+.stat-card.accent .stat-label{color:rgba(255,255,255,0.6)}
+.stat-card.accent .stat-num{color:#fff}
+.stat-card.accent .stat-sub{color:rgba(255,255,255,0.5)}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);margin-bottom:20px}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.card-head h2{font-size:16px;font-weight:700;color:var(--ink)}
+.card-body{padding:22px}
+.btn-primary{padding:9px 18px;background:var(--g800);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary:hover{background:var(--g600)}
+.btn-outline{padding:9px 18px;background:none;border:1.5px solid var(--border);color:var(--ink2);border-radius:9px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:.2s}
+.btn-outline:hover{border-color:var(--g200);color:var(--g800)}
+.btn-danger{padding:7px 14px;background:none;border:1.5px solid #fca5a5;color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-danger:hover{background:#fde8e8}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* FORM */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg);outline:none;transition:.2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g600);background:#fff}
+.field textarea{resize:vertical;min-height:80px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-row.three{grid-template-columns:1fr 1fr 1fr}
+
+/* MATERIALS TABLE */
+.mat-table{width:100%;border-collapse:collapse}
+.mat-table th{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--border);text-align:left}
+.mat-table td{padding:12px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.mat-table tr:last-child td{border-bottom:none}
+.mat-table tr:hover td{background:var(--g50)}
+.badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:700}
+.badge-green{background:var(--g50);color:var(--g700)}
+.badge-amber{background:#fef9c3;color:#854d0e}
+.badge-red{background:#fde8e8;color:#7b2424}
+.price-tag{font-family:'Fraunces',serif;font-weight:700;color:var(--g800)}
+
+/* MODAL */
+.modal-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-back.on{display:flex}
+.modal{background:var(--card);border-radius:var(--r-lg);padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--g900);margin-bottom:20px}
+.modal-btns{display:flex;gap:10px;margin-top:20px}
+.modal-btns button{flex:1;padding:12px;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:.2s}
+.modal-btns .btn-save{background:var(--g800);color:#fff}
+.modal-btns .btn-save:hover{background:var(--g600)}
+.modal-btns .btn-cancel{background:var(--bg);color:var(--ink2);border:1.5px solid var(--border)}
+
+.field input:disabled,.field select:disabled,.field textarea:disabled{background:var(--bg);color:var(--ink2);cursor:default;border-color:var(--border);opacity:1}
+
+/* PROFILE FIELDS */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* MOBILE SIDEBAR */
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400}
+.mob-overlay.on{display:block}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .side-nav{transform:translateX(-100%);transition:transform .3s;z-index:450}
+  .side-nav.on{transform:translateX(0)}
+  .main{margin-left:0;padding:20px 16px 60px}
+  .burger{display:flex}
+  .topbar-user .name{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .profile-grid{grid-template-columns:1fr}
+  .field-row{grid-template-columns:1fr}
+  .field-row.three{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">CO<span>S</span>Truct</div>
+  <div class="topbar-right">
+    <div class="topbar-user">
+      <div class="user-avatar" id="topAvatar">S</div>
+      <span class="name" id="topName">Supplier</span>
+    </div>
+    <button class="burger" id="burgerBtn" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<!-- MOB OVERLAY -->
+<div class="mob-overlay" id="mobOverlay" onclick="toggleNav()"></div>
+
+<!-- SIDEBAR NAV -->
+<div class="side-nav" id="sideNav">
+  <div class="side-nav-inner">
+    <div class="nav-sec">Dashboard</div>
+    <div class="nav-item active" onclick="showPanel('overview')">Overview</div>
+    <div class="nav-sec">Catalog</div>
+    <div class="nav-item" onclick="showPanel('materials')">Materials</div>
+    <div class="nav-item" onclick="showPanel('addMat')">Add Material</div>
+    <div class="nav-sec">Account</div>
+    <div class="nav-item" onclick="showPanel('profile')">Store Profile</div>
+
+  </div>
+  <div class="side-foot">
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div></div><!-- sidebar placeholder -->
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="panel-overview">
+      <div class="page-header">
+        <h1 id="welcomeTitle">Welcome back</h1>
+        <p>Here's what's happening with your store today.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <div class="stat-label">Total Materials</div>
+          <div class="stat-num" id="statTotal">0</div>
+          <div class="stat-sub">in your catalog</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Profile Views</div>
+          <div class="stat-num" id="statProfileViews">0</div>
+          <div class="stat-sub">total views</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>Recent Materials</h2>
+          <button class="btn-primary btn-sm" onclick="showPanel('materials')">View All</button>
+        </div>
+        <div class="card-body" id="recentMats">
+          <p style="color:var(--ink3);font-size:14px">No materials yet. <a href="#" onclick="showPanel('addMat')" style="color:var(--g600);font-weight:600">Add your first material →</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATERIALS LIST -->
+    <div class="panel" id="panel-materials">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div><h1>Materials</h1><p>Manage your catalog</p></div>
+        <button class="btn-primary" onclick="showPanel('addMat')">+ Add Material</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Your Catalog</h2></div>
+        <div class="card-body" style="padding:0">
+          <div id="matTableWrap" style="overflow-x:auto">
+            <table class="mat-table" id="matTable">
+              <thead><tr>
+                <th>Material</th><th>Price</th><th>Unit</th><th>Description</th><th></th>
+              </tr></thead>
+              <tbody id="matBody"></tbody>
+            </table>
+          </div>
+          <div id="matEmpty" style="padding:40px;text-align:center;color:var(--ink3);font-size:14px;display:none">No materials listed yet. <a href="#" onclick="showPanel('addMat')" style="color:var(--g600);font-weight:600">Add one now →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD MATERIAL -->
+    <div class="panel" id="panel-addMat">
+      <div class="page-header"><h1>Add Material</h1><p>Add a new item to your catalog</p></div>
+      <div class="card">
+        <div class="card-head"><h2>Material Details</h2></div>
+        <div class="card-body">
+          <div class="field"><label>Material Name</label><input type="text" id="mName" placeholder="e.g. Portland Cement 40kg"></div>
+          <div class="field-row">
+            <div class="field"><label>Price (₱)</label><input type="number" id="mPrice" placeholder="0.00" min="0" step="0.01"></div>
+            <div class="field"><label>Unit</label>
+              <select id="mUnit">
+                <option value="bag">Bag</option>
+                <option value="pc">Piece</option>
+                <option value="m³">m³</option>
+                <option value="m²">m²</option>
+                <option value="kg">kg</option>
+                <option value="liter">Liter</option>
+                <option value="roll">Roll</option>
+                <option value="set">Set</option>
+                <option value="length">Length</option>
+                <option value="sheet">Sheet</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Description (optional)</label><textarea id="mDesc" placeholder="Brief description of the material..."></textarea></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-primary" onclick="addMaterial()">Add to Catalog</button>
+            <button class="btn-outline" onclick="showPanel('materials')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="panel" id="panel-profile">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div><h1>Store Profile</h1><p id="profileSubtitle">Your business information</p></div>
+        <button class="btn-primary" id="editProfileBtn" onclick="toggleEditProfile()">Edit Profile</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Store Information</h2></div>
+        <div class="card-body">
+          <div class="profile-grid">
+            <div class="field"><label>Store Name</label><input type="text" id="pStoreName" disabled></div>
+            <div class="field"><label>Owner Name</label><input type="text" id="pOwner" disabled></div>
+          </div>
+          <div class="profile-grid">
+            <div class="field"><label>Category</label>
+              <select id="pCategory" disabled>
+                <option value="construction">General Construction</option>
+                <option value="hardware">Hardware</option>
+                <option value="lumber">Lumber & Wood</option>
+                <option value="cement">Cement & Aggregates</option>
+              </select>
+            </div>
+            <div class="field"><label>Location</label>
+              <select id="pLocation" disabled>
+                <option value="Tigaon">Tigaon</option>
+                <option value="Goa">Goa</option>
+                <option value="San Jose">San Jose</option>
+                <option value="Lagonoy">Lagonoy</option>
+                <option value="Sagnay">Sagnay</option>
+              </select>
+            </div>
+          </div>
+          <div class="profile-grid">
+            <div class="field"><label>Contact / Phone</label><input type="text" id="pContact" placeholder="+63 9XX XXX XXXX" disabled></div>
+            <div class="field"><label>Delivery</label>
+              <select id="pDelivery" disabled>
+                <option value="Available">Available</option>
+                <option value="For Pickup Only">For Pickup Only</option>
+                <option value="Within Partido Area">Within Partido Area</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Address</label><input type="text" id="pAddress" placeholder="Full store address" disabled></div>
+          <div id="profileSaveBtns" style="display:none;gap:10px;display:none">
+            <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+            <button class="btn-outline" onclick="cancelEditProfile()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-back" id="editModal">
+  <div class="modal">
+    <h2>Edit Material</h2>
+    <div class="field"><label>Material Name</label><input type="text" id="eName"></div>
+    <div class="field-row">
+      <div class="field"><label>Price (₱)</label><input type="number" id="ePrice" step="0.01" min="0"></div>
+      <div class="field"><label>Unit</label>
+        <select id="eUnit">
+          <option value="bag">Bag</option>
+          <option value="pc">Piece</option>
+          <option value="m³">m³</option>
+          <option value="m²">m²</option>
+          <option value="kg">kg</option>
+          <option value="liter">Liter</option>
+          <option value="roll">Roll</option>
+          <option value="set">Set</option>
+          <option value="length">Length</option>
+          <option value="sheet">Sheet</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="eDesc"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveEdit()">Save Changes</button>
+      <button class="btn-cancel" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { supabase, getCurrentUser, getSupplierByUserId, escapeHtml } from './supabase-client.js';
+
+let supplier = null;         // suppliers row
+let materials = [];          // materials rows for this supplier
+let editId = null;           // material id being edited
+let currentUser = null;
+
+const CAT_LABELS = {
+  cement: 'Cement & Aggregates', steel: 'Steel & Rebars', lumber: 'Lumber & Plywood',
+  hardware: 'Hardware & Tools', paint: 'Paint & Coating',
+  electrical: 'Electrical', plumbing: 'Plumbing'
+};
+
+async function init() {
+  currentUser = await getCurrentUser();
+  if (!currentUser) { location.href = 'login.html'; return; }
+  if (currentUser.role !== 'supplier') { location.href = 'index.html'; return; }
+
+  supplier = await getSupplierByUserId(currentUser.id);
+  if (!supplier) { alert('Your supplier record is missing. Please contact support.'); location.href = 'index.html'; return; }
+
+  document.getElementById('topName').textContent = supplier.name;
+  document.getElementById('topAvatar').textContent = (supplier.owner_name || supplier.name || 'S').charAt(0).toUpperCase();
+  document.getElementById('welcomeTitle').textContent = 'Welcome, ' + (supplier.owner_name || supplier.name);
+
+  await loadMaterials();
+  loadProfile();
+  refreshStats();
+  renderMatTable();
+  renderRecent();
+}
+
+async function loadMaterials() {
+  const { data, error } = await supabase
+    .from('materials')
+    .select('*')
+    .eq('supplier_id', supplier.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('loadMaterials:', error); return; }
+  materials = data || [];
+}
+
+function toggleNav() {
+  document.getElementById('sideNav').classList.toggle('on');
+  document.getElementById('mobOverlay').classList.toggle('on');
+}
+
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const nav = document.querySelector(`.nav-item[onclick="showPanel('${id}')"]`);
+  if (nav) nav.classList.add('active');
+  document.getElementById('sideNav').classList.remove('on');
+  document.getElementById('mobOverlay').classList.remove('on');
+  if (id === 'materials') renderMatTable();
+  if (id === 'overview') { refreshStats(); renderRecent(); }
+}
+
+function refreshStats() {
+  document.getElementById('statTotal').textContent = materials.length;
+  document.getElementById('statProfileViews').textContent = supplier.profile_views ?? 0;
+}
+
+function stockBadge(qty) {
+  const n = parseInt(qty);
+  if (isNaN(n) || qty === null || qty === undefined) return '';
+  const out = n === 0, low = n > 0 && n <= 10;
+  const cls = out ? 'badge-red' : low ? 'badge-amber' : 'badge-green';
+  const lbl = out ? 'Out of Stock' : low ? 'Low Stock' : 'In Stock';
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function renderMatTable() {
+  const body = document.getElementById('matBody');
+  const empty = document.getElementById('matEmpty');
+  if (!materials.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  body.innerHTML = materials.map(m => `<tr>
+    <td style="font-weight:600">${escapeHtml(m.name)}</td>
+    <td class="price-tag">₱${parseFloat(m.price).toFixed(2)}</td>
+    <td style="color:var(--ink3)">${escapeHtml(m.unit)}</td>
+    <td style="color:var(--ink3);font-size:13px">${escapeHtml(m.description || '—')}</td>
+    <td style="display:flex;gap:6px;justify-content:flex-end">
+      <button class="btn-outline btn-sm" data-edit="${m.id}">Edit</button>
+      <button class="btn-danger" data-del="${m.id}">Delete</button>
+    </td>
+  </tr>`).join('');
+
+  // Wire up buttons (avoid inline onclick with dynamic ids)
+  body.querySelectorAll('[data-edit]').forEach(b =>
+    b.addEventListener('click', () => openEdit(b.getAttribute('data-edit'))));
+  body.querySelectorAll('[data-del]').forEach(b =>
+    b.addEventListener('click', () => deleteMat(b.getAttribute('data-del'))));
+}
+
+function renderRecent() {
+  const mats = materials.slice(0, 4);
+  const el = document.getElementById('recentMats');
+  if (!mats.length) {
+    el.innerHTML = `<p style="color:var(--ink3);font-size:14px">No materials yet. <a href="#" onclick="showPanel('addMat')" style="color:var(--g600);font-weight:600">Add your first material →</a></p>`;
+    return;
+  }
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${mats.map(m => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px">${escapeHtml(m.name)}</div>
+      <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--g800)">₱${parseFloat(m.price).toFixed(2)}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px">per ${escapeHtml(m.unit)}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+async function addMaterial() {
+  const name = document.getElementById('mName').value.trim();
+  const price = document.getElementById('mPrice').value;
+  if (!name || !price) { alert('Please fill in the material name and price.'); return; }
+
+  const { error } = await supabase.from('materials').insert({
+    supplier_id: supplier.id,
+    name,
+    price: parseFloat(price),
+    unit: document.getElementById('mUnit').value,
+    description: document.getElementById('mDesc').value.trim() || null
+  });
+  if (error) { alert('Failed to add material: ' + error.message); return; }
+
+  await loadMaterials();
+  alert(`"${name}" added to your catalog.`);
+  document.getElementById('mName').value = '';
+  document.getElementById('mPrice').value = '';
+  document.getElementById('mDesc').value = '';
+  refreshStats();
+  showPanel('materials');
+}
+
+function openEdit(id) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  editId = id;
+  document.getElementById('eName').value = m.name;
+  document.getElementById('ePrice').value = m.price;
+  document.getElementById('eUnit').value = m.unit;
+  document.getElementById('eDesc').value = m.description || '';
+  document.getElementById('editModal').classList.add('on');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('on'); }
+
+async function saveEdit() {
+  if (!editId) return;
+  const { error } = await supabase.from('materials')
+    .update({
+      name: document.getElementById('eName').value,
+      price: parseFloat(document.getElementById('ePrice').value),
+      unit: document.getElementById('eUnit').value,
+      description: document.getElementById('eDesc').value || null
+    })
+    .eq('id', editId);
+  if (error) { alert('Failed to save: ' + error.message); return; }
+
+  await loadMaterials();
+  closeEdit();
+  renderMatTable();
+  refreshStats();
+}
+
+async function deleteMat(id) {
+  if (!confirm('Delete this material?')) return;
+  const { error } = await supabase.from('materials').delete().eq('id', id);
+  if (error) { alert('Failed to delete: ' + error.message); return; }
+  await loadMaterials();
+  renderMatTable();
+  refreshStats();
+}
+
+function loadProfile() {
+  document.getElementById('pStoreName').value = supplier.name || '';
+  document.getElementById('pOwner').value = supplier.owner_name || '';
+  document.getElementById('pCategory').value = supplier.category || 'construction';
+  document.getElementById('pLocation').value = supplier.location || 'Tigaon';
+  document.getElementById('pContact').value = supplier.contact || '';
+  document.getElementById('pDelivery').value = supplier.delivery || 'Available';
+  document.getElementById('pAddress').value = supplier.address || '';
+}
+
+let profileEditing = false;
+function toggleEditProfile() {
+  profileEditing = true;
+  ['pStoreName','pOwner','pCategory','pLocation','pContact','pDelivery','pAddress']
+    .forEach(id => { document.getElementById(id).disabled = false; });
+  document.getElementById('profileSaveBtns').style.display = 'flex';
+  document.getElementById('editProfileBtn').style.display = 'none';
+  document.getElementById('profileSubtitle').textContent = 'Update your business information';
+}
+
+function cancelEditProfile() {
+  profileEditing = false;
+  loadProfile();
+  ['pStoreName','pOwner','pCategory','pLocation','pContact','pDelivery','pAddress']
+    .forEach(id => { document.getElementById(id).disabled = true; });
+  document.getElementById('profileSaveBtns').style.display = 'none';
+  document.getElementById('editProfileBtn').style.display = '';
+  document.getElementById('profileSubtitle').textContent = 'Your business information';
+}
+
+async function saveProfile() {
+  const patch = {
+    name: document.getElementById('pStoreName').value,
+    owner_name: document.getElementById('pOwner').value,
+    category: document.getElementById('pCategory').value,
+    location: document.getElementById('pLocation').value,
+    contact: document.getElementById('pContact').value,
+    delivery: document.getElementById('pDelivery').value,
+    address: document.getElementById('pAddress').value
+  };
+  const { data, error } = await supabase.from('suppliers')
+    .update(patch).eq('id', supplier.id).select().maybeSingle();
+  if (error) { alert('Failed to save: ' + error.message); return; }
+
+  supplier = data || { ...supplier, ...patch };
+  document.getElementById('topName').textContent = supplier.name;
+  cancelEditProfile();
+  alert('Profile saved successfully!');
+}
+
+async function doLogout() {
+  if (!confirm('Logout?')) return;
+  await supabase.auth.signOut();
+  location.href = 'index.html';
+}
+
+document.getElementById('editModal').addEventListener('click', function (e) {
+  if (e.target === this) closeEdit();
+});
+
+// Expose for inline onclick handlers
+window.toggleNav = toggleNav;
+window.showPanel = showPanel;
+window.addMaterial = addMaterial;
+window.openEdit = openEdit;
+window.closeEdit = closeEdit;
+window.saveEdit = saveEdit;
+window.deleteMat = deleteMat;
+window.toggleEditProfile = toggleEditProfile;
+window.cancelEditProfile = cancelEditProfile;
+window.saveProfile = saveProfile;
+window.doLogout = doLogout;
+
+init();
+</script>
+</body>
+</html>

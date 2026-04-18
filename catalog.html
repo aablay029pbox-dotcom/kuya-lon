@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supplier Catalog – COSTruct</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{--g900:#052016;--g800:#0a3d2b;--g700:#0d4f37;--g600:#0f5a3f;--g400:#1a8a5e;--g200:#a8dfc7;--g100:#d4f0e3;--g50:#edf8f3;--ink:#111816;--ink2:#3a4a42;--ink3:#6b7a72;--bg:#f2f5f3;--card:#fff;--border:#dde8e2;--red:#dc3545;--amber:#d97706;--shadow:0 4px 20px rgba(10,61,43,0.09);--r:12px;--r-lg:18px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink)}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(5,32,22,0.96);backdrop-filter:blur(12px);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07)}
+.logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:#fff}
+.logo span{color:var(--g200)}
+.back-btn{padding:8px 18px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;transition:.2s}
+.back-btn:hover{background:rgba(255,255,255,0.18)}
+.sup-hero{background:var(--g900);padding:100px 24px 50px;position:relative;overflow:hidden}
+.sup-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:48px 48px}
+.sup-hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.hero-badge{padding:4px 12px;border-radius:100px;background:rgba(168,223,199,0.15);border:1px solid rgba(168,223,199,0.3);color:var(--g200);font-size:12px;font-weight:600}
+.sup-hero h1{font-family:'Fraunces',serif;font-size:clamp(28px,5vw,44px);font-weight:700;color:#fff;margin-bottom:16px;letter-spacing:-1px}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap}
+.hero-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,0.6)}
+.container{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+.grid-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
+.contact-card{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border);overflow:hidden;position:sticky;top:80px}
+.contact-card-head{background:var(--g800);padding:20px;color:#fff}
+.contact-card-head h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.contact-card-head p{font-size:12px;color:rgba(255,255,255,0.6)}
+.contact-items{padding:16px}
+.ci{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.ci:last-of-type{border-bottom:none}
+.ci-icon{width:36px;height:36px;border-radius:9px;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ci-label{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.ci-val{font-size:14px;font-weight:600;color:var(--ink);margin-top:1px}
+.contact-btns{padding:14px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.btn-g{padding:12px;text-align:center;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:.2s;text-decoration:none;display:block}
+.btn-g.primary{background:var(--g800);color:#fff}
+.btn-g.primary:hover{background:var(--g600)}
+.btn-g.outline{background:none;border:1.5px solid var(--border);color:var(--ink2)}
+.btn-g.outline:hover{border-color:var(--g200);background:var(--g50)}
+.catalog-card{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--border)}
+.catalog-head{padding:24px 24px 16px;border-bottom:1px solid var(--border)}
+.catalog-head h2{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--g900);margin-bottom:14px}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--bg);outline:none;transition:.2s;flex:1;min-width:160px}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--g600)}
+.materials-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:20px}
+.mat-card{border:1.5px solid var(--border);border-radius:var(--r);padding:18px;transition:.25s;position:relative}
+.mat-card:hover{border-color:var(--g200);box-shadow:var(--shadow)}
+.mat-cat{display:inline-block;padding:3px 9px;border-radius:100px;background:var(--g50);color:var(--g700);font-size:11px;font-weight:700;margin-bottom:10px}
+.mat-card h3{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.mat-desc{font-size:12px;color:var(--ink3);line-height:1.5;margin-bottom:12px}
+.mat-price{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--g800)}
+.mat-unit{font-size:12px;color:var(--ink3);margin-top:2px}
+.mat-stock{display:inline-block;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:700;margin-top:10px}
+.in-stock{background:#d4edda;color:#155724}
+.low-stock{background:#fff3cd;color:#856404}
+.out-of-stock{background:#fde8e8;color:#7b2424}
+.empty-state{text-align:center;padding:60px 20px;color:var(--ink3)}
+.empty-state svg{width:56px;height:56px;stroke:var(--border);margin:0 auto 16px;display:block}
+.empty-state h3{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-backdrop.on{display:flex}
+.modal{background:var(--card);border-radius:var(--r-lg);padding:32px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal h2{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--g900);margin-bottom:20px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+.form-group input,.form-group textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;outline:none;transition:.2s;resize:vertical}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--g600)}
+.form-group textarea{min-height:90px}
+.modal-btns{display:flex;gap:10px;margin-top:18px}
+.modal-btns button{flex:1;padding:12px;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:.2s}
+.modal-btns .btn-submit{background:var(--g800);color:#fff}
+.modal-btns .btn-submit:hover{background:var(--g600)}
+.modal-btns .btn-cancel{background:var(--bg);color:var(--ink2);border:1.5px solid var(--border)}
+@media(max-width:768px){
+  nav{padding:0 16px}
+  .grid-layout{grid-template-columns:1fr}
+  .contact-card{position:static}
+  .sup-hero{padding:80px 16px 36px}
+  .materials-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .materials-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">CO<span>S</span>Truct</div>
+  <a href="suppliers.html" class="back-btn">← Back to Suppliers</a>
+</nav>
+
+<div class="sup-hero">
+  <div class="sup-hero-grid"></div>
+  <div class="sup-hero-inner">
+    <div class="hero-badges">
+      <span class="hero-badge" id="supCategory">–</span>
+      <span class="hero-badge" id="supSince">–</span>
+    </div>
+    <h1 id="supName">Loading...</h1>
+    <div class="hero-meta">
+      <div class="hero-meta-item">Location: <span id="supLocation">–</span></div>
+      <div class="hero-meta-item">Delivery: <span id="supDelivery">–</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="grid-layout">
+    <div class="contact-card">
+      <div class="contact-card-head">
+        <h3>Contact Supplier</h3>
+        <p>Reach out for inquiries or orders</p>
+      </div>
+      <div class="contact-items">
+        <div class="ci"><div class="ci-icon" style="font-size:13px;font-weight:700;color:var(--g700)">@</div><div><div class="ci-label">Email</div><div class="ci-val" id="contactEmail">–</div></div></div>
+        <div class="ci"><div class="ci-icon" style="font-size:13px;font-weight:700;color:var(--g700)">#</div><div><div class="ci-label">Phone</div><div class="ci-val" id="contactPhone">–</div></div></div>
+        <div class="ci"><div class="ci-icon" style="font-size:13px;font-weight:700;color:var(--g700)">Loc</div><div><div class="ci-label">Address</div><div class="ci-val" id="contactAddress">–</div></div></div>
+        <div class="ci"><div class="ci-icon" style="font-size:13px;font-weight:700;color:var(--g700)">Del</div><div><div class="ci-label">Delivery</div><div class="ci-val" id="contactDelivery">–</div></div></div>
+      </div>
+      <div class="contact-btns">
+        <button class="btn-g primary" onclick="openModal()">Send Inquiry</button>
+        <button class="btn-g outline" onclick="callSupplier()">Call Supplier</button>
+        <button class="btn-g outline" onclick="emailSupplier()">Email Supplier</button>
+      </div>
+    </div>
+
+    <div class="catalog-card">
+      <div class="catalog-head">
+        <h2>Material Catalog</h2>
+        <div class="filter-bar">
+          <input type="text" id="searchMat" placeholder="Search materials..." oninput="filterMats()">
+          <select id="catFilter" onchange="filterMats()">
+            <option value="all">All categories</option>
+            <option value="cement">Cement & Aggregates</option>
+            <option value="steel">Steel & Rebars</option>
+            <option value="lumber">Lumber & Plywood</option>
+            <option value="hardware">Hardware & Tools</option>
+            <option value="paint">Paint & Coating</option>
+            <option value="electrical">Electrical</option>
+            <option value="plumbing">Plumbing</option>
+          </select>
+          <select id="stockFilter" onchange="filterMats()">
+            <option value="all">All stock</option>
+            <option value="in-stock">In Stock</option>
+            <option value="low-stock">Low Stock</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+      <div class="materials-grid" id="matsGrid"></div>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0H4"/></svg>
+        <h3>No Materials Listed</h3>
+        <p>This supplier hasn't added materials yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INQUIRY MODAL -->
+<div class="modal-backdrop" id="modalBack">
+  <div class="modal">
+    <h2>Send Inquiry</h2>
+    <form onsubmit="sendInquiry(event)">
+      <div class="form-group"><label>Your Name</label><input type="text" id="iName" required placeholder="Juan dela Cruz"></div>
+      <div class="form-group"><label>Your Email</label><input type="email" id="iEmail" required placeholder="you@example.com"></div>
+      <div class="form-group"><label>Phone (optional)</label><input type="tel" id="iPhone" placeholder="+63 9XX XXX XXXX"></div>
+      <div class="form-group"><label>Message</label><textarea id="iMsg" required placeholder="What materials do you need?"></textarea></div>
+      <div class="modal-btns">
+        <button type="submit" class="btn-submit">Send Inquiry</button>
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+import { supabase, getSupplierByEmail, escapeHtml } from './supabase-client.js';
+
+let supplier = null, allMats = [];
+const CAT_LABELS = {
+  cement: 'Cement & Aggregates',
+  steel: 'Steel & Rebars',
+  lumber: 'Lumber & Plywood',
+  hardware: 'Hardware & Tools',
+  paint: 'Paint & Coating',
+  electrical: 'Electrical',
+  plumbing: 'Plumbing'
+};
+
+async function init() {
+  const p = new URLSearchParams(location.search);
+  const email = p.get('email');
+  if (!email) { alert('No supplier specified'); location.href = 'suppliers.html'; return; }
+
+  supplier = await getSupplierByEmail(email);
+  if (!supplier) { alert('Supplier not found'); location.href = 'suppliers.html'; return; }
+
+  // Increment profile view counter (fire-and-forget)
+  supabase.rpc('increment_profile_views', { supplier_email: email }).catch(() => {
+    // Fallback: direct update (will only work if policies permit)
+    supabase.from('suppliers')
+      .update({ profile_views: (supplier.profile_views || 0) + 1 })
+      .eq('id', supplier.id);
+  });
+
+  document.getElementById('supName').textContent = supplier.name;
+  document.getElementById('supLocation').textContent = supplier.location || '–';
+  document.getElementById('supDelivery').textContent = supplier.delivery || 'Available';
+  document.getElementById('supCategory').textContent =
+    (supplier.category || '').charAt(0).toUpperCase() + (supplier.category || '').slice(1);
+  document.getElementById('supSince').textContent = supplier.since ? 'Since ' + supplier.since : '';
+  document.getElementById('contactEmail').textContent = supplier.email;
+  document.getElementById('contactPhone').textContent = supplier.contact || 'N/A';
+  document.getElementById('contactAddress').textContent = supplier.address || 'Partido Area';
+  document.getElementById('contactDelivery').textContent = supplier.delivery || 'Available';
+
+  // Load materials
+  const { data: mats, error } = await supabase
+    .from('materials')
+    .select('*')
+    .eq('supplier_id', supplier.id)
+    .order('created_at', { ascending: false });
+  if (error) console.error('materials load:', error);
+
+  // Normalize so existing render code works (desc instead of description)
+  allMats = (mats || []).map(m => ({
+    ...m,
+    desc: m.description || ''
+  }));
+  renderMats(allMats);
+
+  // Realtime: refresh when supplier updates their catalog
+  supabase
+    .channel('catalog-' + supplier.id)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'materials', filter: `supplier_id=eq.${supplier.id}` },
+      async () => {
+        const { data } = await supabase
+          .from('materials').select('*')
+          .eq('supplier_id', supplier.id)
+          .order('created_at', { ascending: false });
+        allMats = (data || []).map(m => ({ ...m, desc: m.description || '' }));
+        filterMats();
+      }
+    ).subscribe();
+}
+
+function renderMats(list) {
+  const g = document.getElementById('matsGrid');
+  const e = document.getElementById('emptyState');
+  if (!list.length) { g.innerHTML = ''; e.style.display = 'block'; return; }
+  e.style.display = 'none';
+  g.innerHTML = list.map(m => {
+    const qty = m.qty;
+    let sc, sl;
+    if (qty !== undefined && qty !== null) {
+      const n = parseInt(qty);
+      sc = n === 0 ? 'out-of-stock' : n <= 10 ? 'low-stock' : 'in-stock';
+      sl = n === 0 ? 'Out of Stock' : n <= 10 ? `Low Stock (${n} left)` : `In Stock (${n} available)`;
+    } else {
+      sc = m.stock === 'out-of-stock' || m.stock === 'discontinued'
+        ? 'out-of-stock'
+        : m.stock === 'low-stock' || m.stock === 'very-low-stock' ? 'low-stock' : 'in-stock';
+      const slMap = {
+        'in-stock': 'In Stock', 'high-stock': 'In Stock', 'medium-stock': 'In Stock',
+        'low-stock': 'Low Stock', 'very-low-stock': 'Low Stock',
+        'out-of-stock': 'Out of Stock', 'pre-order': 'Pre-Order', 'discontinued': 'Discontinued'
+      };
+      sl = slMap[m.stock] || 'In Stock';
+    }
+    return `<div class="mat-card">
+      <span class="mat-cat">${escapeHtml(CAT_LABELS[m.category] || m.category || 'Material')}</span>
+      <h3>${escapeHtml(m.name)}</h3>
+      <div class="mat-desc">${escapeHtml(m.desc || 'No description available.')}</div>
+      <div class="mat-price">₱${parseFloat(m.price).toFixed(2)}</div>
+      <div class="mat-unit">per ${escapeHtml(m.unit)}</div>
+      <span class="mat-stock ${sc}">${sl}</span>
+    </div>`;
+  }).join('');
+}
+
+function filterMats() {
+  const q = document.getElementById('searchMat').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const stock = document.getElementById('stockFilter').value;
+  const f = allMats.filter(m => {
+    const mq = !q || m.name.toLowerCase().includes(q) || (m.desc && m.desc.toLowerCase().includes(q));
+    const mc = cat === 'all' || m.category === cat;
+    let sc;
+    if (m.qty !== undefined && m.qty !== null) {
+      const n = parseInt(m.qty);
+      sc = n === 0 ? 'out-of-stock' : n <= 10 ? 'low-stock' : 'in-stock';
+    } else {
+      sc = m.stock === 'out-of-stock' || m.stock === 'discontinued'
+        ? 'out-of-stock'
+        : m.stock === 'low-stock' || m.stock === 'very-low-stock' ? 'low-stock' : 'in-stock';
+    }
+    const ms = stock === 'all' || sc === stock;
+    return mq && mc && ms;
+  });
+  renderMats(f);
+}
+
+function openModal() { document.getElementById('modalBack').classList.add('on'); }
+function closeModal() { document.getElementById('modalBack').classList.remove('on'); }
+
+function sendInquiry(e) {
+  e.preventDefault();
+  const name = document.getElementById('iName').value;
+  const email = document.getElementById('iEmail').value;
+  const phone = document.getElementById('iPhone').value;
+  const msg = document.getElementById('iMsg').value;
+  alert(`Inquiry sent to ${supplier.name}!\n\nFrom: ${name} (${email})\nPhone: ${phone || 'N/A'}\n\nMessage: ${msg}\n\nThe supplier will contact you soon.`);
+  closeModal(); e.target.reset();
+}
+
+function callSupplier() {
+  if (supplier.contact && supplier.contact !== 'N/A') location.href = 'tel:' + supplier.contact;
+  else alert('Phone number not available.');
+}
+
+function emailSupplier() {
+  const subj = encodeURIComponent('Inquiry – ' + supplier.name);
+  location.href = 'mailto:' + supplier.email + '?subject=' + subj;
+}
+
+document.getElementById('modalBack').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
+
+// Expose to inline handlers
+window.filterMats = filterMats;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.sendInquiry = sendInquiry;
+window.callSupplier = callSupplier;
+window.emailSupplier = emailSupplier;
+
+init();
+</script>
+</body>
+</html>

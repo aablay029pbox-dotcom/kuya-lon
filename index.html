@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSTruct – Real-Time Construction Estimation</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{--g900:#052016;--g800:#0a3d2b;--g700:#0d4f37;--g600:#0f5a3f;--g400:#1a8a5e;--g200:#a8dfc7;--g100:#d4f0e3;--g50:#edf8f3;--ink:#111816;--ink2:#3a4a42;--ink3:#6b7a72;--bg:#f2f5f3;--card:#fff;--border:#dde8e2;--red:#dc3545;--shadow:0 4px 20px rgba(10,61,43,0.09);--shadow-lg:0 12px 40px rgba(10,61,43,0.13);--r:12px;--r-lg:18px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(5,32,22,0.96);backdrop-filter:blur(12px);padding:0 32px;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07)}
+nav.guest-nav{justify-content:center;position:relative}
+nav.guest-nav .nav-right{position:absolute;right:32px}
+.logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.3px;transition:font-size .2s}
+.logo.logo-center{font-size:36px;letter-spacing:-0.5px}
+.logo span{color:var(--g200)}
+nav ul{display:flex;gap:28px;list-style:none}
+nav ul a{text-decoration:none;font-size:14px;font-weight:500;color:rgba(255,255,255,0.65);transition:color .2s}
+nav ul a:hover{color:#fff}
+.nav-right{display:flex;align-items:center;gap:12px}
+.login-btn{padding:7px 18px;background:rgba(15,90,63,0.35);color:rgba(255,255,255,0.7);border-radius:8px;text-decoration:none;font-size:13px;font-weight:500;transition:.2s;border:1px solid rgba(168,223,199,0.15);letter-spacing:.2px}
+.login-btn:hover{background:rgba(15,90,63,0.65);color:#fff;border-color:rgba(168,223,199,0.35)}
+.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:none;border:none}
+.burger span{display:block;width:22px;height:2px;background:rgba(255,255,255,0.8);border-radius:2px;transition:.3s}
+
+/* SIDEBAR */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:600;backdrop-filter:blur(3px)}
+.overlay.on{display:block}
+.sidebar{position:fixed;top:0;right:-340px;width:320px;height:100vh;background:var(--card);z-index:700;transition:right .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.sidebar.on{right:0}
+.sb-head{background:var(--g800);padding:28px 22px 22px;position:relative}
+.sb-avatar{width:48px;height:48px;border-radius:12px;background:var(--g600);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin-bottom:12px}
+.sb-name{color:#fff;font-size:16px;font-weight:600}
+.sb-email{color:rgba(255,255,255,0.6);font-size:13px;margin-top:2px}
+.sb-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.sb-menu{padding:12px 0;flex:1;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:14px;padding:13px 22px;text-decoration:none;color:var(--ink2);font-size:14px;font-weight:500;transition:.2s;border-left:3px solid transparent;cursor:pointer}
+.sb-item:hover{background:var(--g50);border-left-color:var(--g600);color:var(--g800)}
+.sb-item .ico{width:22px;text-align:center;font-size:17px}
+.sb-foot{padding:16px 22px;border-top:1px solid var(--border)}
+.logout-btn{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.logout-btn:hover{opacity:.88}
+
+
+/* SURVEY MODAL */
+.survey-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:810;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.survey-wrap.on{display:flex}
+.survey-box{background:#fff;border-radius:22px;max-width:520px;width:100%;position:relative;overflow:hidden;box-shadow:0 24px 64px rgba(10,61,43,0.2)}
+.survey-header{background:var(--g900);padding:28px 32px 24px;position:relative}
+.survey-header-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.survey-step-label{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--g200);margin-bottom:8px;position:relative;z-index:1}
+.survey-question{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#fff;line-height:1.3;position:relative;z-index:1}
+.survey-progress{display:flex;gap:6px;margin-top:18px;position:relative;z-index:1}
+.survey-dot{height:4px;border-radius:4px;background:rgba(255,255,255,0.2);flex:1;transition:.3s}
+.survey-dot.done{background:var(--g200)}
+.survey-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:2}
+.survey-body{padding:28px 32px 32px}
+.survey-options{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.survey-opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:.2s;background:#fff}
+.survey-opt:hover{border-color:var(--g400);background:var(--g50)}
+.survey-opt.selected{border-color:var(--g600);background:var(--g50)}
+.survey-opt-icon{font-size:22px;flex-shrink:0}
+.survey-opt-text{text-align:left}
+.survey-opt-title{font-size:14px;font-weight:600;color:var(--ink);display:block}
+.survey-opt-sub{font-size:12px;color:var(--ink3);margin-top:2px;display:block}
+.survey-nav{display:flex;gap:10px;align-items:center}
+.survey-back{padding:11px 20px;background:none;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink3);cursor:pointer;transition:.2s}
+.survey-back:hover{border-color:var(--g800);color:var(--g800)}
+.survey-next{flex:1;padding:13px 24px;background:var(--g800);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.survey-next:hover{background:var(--g600)}
+.survey-next:disabled{background:var(--border);color:var(--ink3);cursor:not-allowed}
+.survey-finish{background:var(--g600)}
+.survey-finish:hover{background:var(--g400)}
+.survey-sub-text{font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.5}
+/* Welcome screen */
+.survey-welcome-wrap{display:none;text-align:center;padding:8px 0 16px}
+.survey-welcome-icon{font-size:52px;margin-bottom:16px}
+.survey-welcome-title{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--g900);margin-bottom:10px}
+.survey-welcome-desc{font-size:14px;color:var(--ink3);line-height:1.65;max-width:360px;margin:0 auto}
+.survey-welcome-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.survey-welcome-chip{padding:5px 13px;background:var(--g50);border:1px solid var(--g100);border-radius:100px;font-size:12px;font-weight:600;color:var(--g700)}
+/* Auth screen */
+.survey-auth-wrap{display:none;flex-direction:column;gap:12px;margin-bottom:8px}
+.survey-auth-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;border:none}
+.survey-auth-register{background:var(--g800);color:#fff}
+.survey-auth-register:hover{background:var(--g600)}
+.survey-auth-login{background:#fff;color:var(--g800);border:1.5px solid var(--border)!important;border:none}
+.survey-auth-login:hover{border-color:var(--g800)!important;background:var(--g50)}
+.survey-auth-divider{text-align:center;font-size:12px;color:var(--ink3);font-weight:500}
+
+/* LOCK MODAL */
+.lock-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;align-items:center;justify-content:center;padding:20px}
+.lock-wrap.on{display:flex}
+.lock-box{background:#fff;border-radius:var(--r-lg);padding:40px;max-width:440px;width:100%;text-align:center;position:relative}
+.lock-icon{font-size:40px;margin-bottom:16px}
+.lock-box h2{font-family:'Fraunces',serif;font-size:26px;color:var(--g800);margin-bottom:10px}
+.lock-box p{font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:28px}
+.lock-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;color:var(--ink3);cursor:pointer}
+.lock-btns{display:flex;flex-direction:column;gap:10px}
+.btn-solid{padding:13px 24px;background:var(--g800);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;transition:.2s;text-decoration:none;display:block;width:100%}
+.btn-solid:hover{background:var(--g600)}
+.btn-ghost-dark{padding:12px 24px;background:none;border:1.5px solid var(--border);color:var(--ink3);border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;transition:.2s}
+.btn-ghost-dark:hover{border-color:var(--g800);color:var(--g800)}
+
+/* HERO */
+.hero{min-height:100vh;background:var(--g900);display:flex;align-items:center;justify-content:center;padding:100px 24px 60px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(15,90,63,0.45) 0%,transparent 70%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:720px;text-align:center}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(15,90,63,0.4);border:1px solid rgba(168,223,199,0.3);color:var(--g200);padding:6px 14px;border-radius:100px;font-size:13px;font-weight:500;margin-bottom:28px}
+.hero-tag span{width:7px;height:7px;border-radius:50%;background:var(--g200);display:inline-block}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(36px,7vw,68px);font-weight:700;color:#fff;line-height:1.1;margin-bottom:22px;letter-spacing:-1.5px}
+.hero h1 em{font-style:normal;color:var(--g200)}
+.hero p{font-size:clamp(15px,2.5vw,18px);color:rgba(255,255,255,0.6);max-width:540px;margin:0 auto 40px;line-height:1.7}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero-btn-primary{padding:15px 32px;background:var(--g600);color:#fff;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit}
+.hero-btn-primary:hover{background:var(--g400);transform:translateY(-1px)}
+.hero-btn-secondary{padding:14px 32px;background:rgba(255,255,255,0.08);color:#fff;border:1.5px solid rgba(255,255,255,0.25);border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit}
+.hero-btn-secondary:hover{background:rgba(255,255,255,0.14)}
+.hero-stats{display:flex;gap:32px;justify-content:center;margin-top:56px;flex-wrap:wrap}
+.stat{text-align:center}
+.stat .num{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:#fff}
+.stat .lbl{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px}
+
+/* SECTIONS */
+.section{padding:80px 24px;max-width:1100px;margin:0 auto}
+.sec-tag{display:inline-block;background:var(--g50);color:var(--g700);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:14px}
+.sec-title{font-family:'Fraunces',serif;font-size:clamp(26px,4vw,38px);font-weight:700;color:var(--g900);margin-bottom:14px;letter-spacing:-0.5px}
+.sec-sub{font-size:15px;color:var(--ink3);max-width:520px;line-height:1.65;margin-bottom:48px}
+
+/* HOW IT WORKS */
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.step-card{background:var(--card);border-radius:var(--r-lg);padding:28px;border:1px solid var(--border);transition:.3s;opacity:0;transform:translateY(24px)}
+.step-card.show{opacity:1;transform:translateY(0)}
+.step-card:hover{border-color:var(--g200);box-shadow:var(--shadow)}
+.step-num-badge{width:36px;height:36px;background:var(--g800);color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;margin-bottom:18px;font-family:'Fraunces',serif}
+.step-card h3{font-size:17px;font-weight:700;color:var(--g900);margin-bottom:8px}
+.step-card p{font-size:14px;color:var(--ink3);line-height:1.6}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.feature-card{background:var(--card);border-radius:var(--r-lg);padding:28px 24px;border:1px solid var(--border);transition:.3s;opacity:0;transform:translateY(24px)}
+.feature-card.show{opacity:1;transform:translateY(0)}
+.feature-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.feat-icon{font-size:28px;margin-bottom:14px}
+.feature-card h3{font-size:16px;font-weight:700;color:var(--g800);margin-bottom:6px}
+.feature-card p{font-size:13px;color:var(--ink3);line-height:1.55}
+
+/* SUPPLIERS PREVIEW */
+.sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.sup-card{background:var(--card);border-radius:var(--r);padding:20px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;transition:.3s;opacity:0;transform:translateY(20px)}
+.sup-card.show{opacity:1;transform:translateY(0)}
+.sup-card:hover{border-color:var(--g200);box-shadow:var(--shadow)}
+.sup-avatar{width:44px;height:44px;border-radius:10px;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--g700);flex-shrink:0;border:1px solid var(--g100);letter-spacing:.5px}
+.sup-name{font-size:14px;font-weight:600;color:var(--g800)}
+.sup-loc{font-size:12px;color:var(--ink3);margin-top:2px}
+
+/* ABOUT */
+.about-wrap{background:var(--g800);border-radius:24px;padding:60px 48px;text-align:center;color:#fff}
+.about-wrap h2{font-family:'Fraunces',serif;font-size:clamp(24px,4vw,36px);font-weight:700;color:#fff;margin-bottom:16px;letter-spacing:-0.5px}
+.about-wrap p{font-size:15px;color:rgba(255,255,255,0.65);max-width:620px;margin:0 auto;line-height:1.7}
+
+/* FOOTER */
+footer{background:var(--g900);color:rgba(255,255,255,0.45);text-align:center;padding:32px 24px;font-size:13px}
+footer strong{color:rgba(255,255,255,0.8)}
+
+@media(max-width:768px){
+  nav ul{display:none!important}
+  .login-btn{display:none!important}
+  .burger{display:flex}
+  .steps-grid,.features-grid{grid-template-columns:1fr}
+  .sup-grid{grid-template-columns:1fr 1fr}
+  .about-wrap{padding:40px 24px}
+  .hero-stats{gap:20px}
+}
+@media(max-width:480px){
+  .sup-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SURVEY MODAL -->
+<div class="survey-wrap" id="surveyWrap">
+  <div class="survey-box">
+    <div class="survey-header">
+      <div class="survey-header-grid"></div>
+      <button class="survey-close" onclick="closeSurvey()">&times;</button>
+      <div class="survey-step-label" id="surveyStepLabel">Step 1 of 4</div>
+      <div class="survey-question" id="surveyQuestion">Ano ang layunin ng iyong proyekto?</div>
+      <div class="survey-progress" id="surveyProgress"></div>
+    </div>
+    <div class="survey-body">
+      <!-- Welcome screen -->
+      <div class="survey-welcome-wrap" id="surveyWelcomeWrap">
+        
+        <div class="survey-welcome-desc">Answer a few quick questions so we can tailor COSTruct to your needs. It only takes 30 seconds.</div>
+
+      </div>
+      <!-- Sub text for question steps -->
+      <p class="survey-sub-text" id="surveySub"></p>
+      <!-- Options for question steps -->
+      <div id="surveyOptionsWrap">
+        <div class="survey-options" id="surveyOptions"></div>
+      </div>
+      <!-- Auth screen -->
+      <div class="survey-auth-wrap" id="surveyAuthWrap">
+        <a href="login.html?mode=register" class="survey-auth-btn survey-auth-register"> Create a Free Account</a>
+        <div class="survey-auth-divider">Already have an account?</div>
+        <a href="login.html" class="survey-auth-btn survey-auth-login"> Log In</a>
+      </div>
+      <div class="survey-nav">
+        <button class="survey-back" id="surveyBackBtn" onclick="surveyBack()" style="display:none">← Back</button>
+        <button class="survey-next" id="surveyNextBtn" onclick="surveyNext()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOCK MODAL -->
+<div class="lock-wrap" id="lockWrap">
+  <div class="lock-box">
+    <button class="lock-close" onclick="closeLock()">&times;</button>
+    
+    <h2>Login Required</h2>
+    <p>Please login or register to access this feature and explore construction materials and suppliers.</p>
+    <div class="lock-btns">
+      <a href="login.html" class="btn-solid">Login or Register</a>
+      <button class="btn-ghost-dark" onclick="closeLock()">Skip for Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">CO<span>S</span>Truct</div>
+  <ul id="navLinks" style="display:none">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="#" onclick="checkAuth('estimation.html?view=saved')">View Estimated Materials</a></li>
+    <li><a href="#" onclick="checkAuth('suppliers.html')">Suppliers</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="login.html" class="login-btn" id="loginBtn" style="display:none">Login</a>
+    <button class="burger" id="burgerBtn" onclick="toggleSidebar()" style="display:none">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <button class="sb-close" onclick="toggleSidebar()">&times;</button>
+    <div class="sb-avatar">U</div>
+    <div class="sb-name" id="sbName">User Name</div>
+    <div class="sb-email" id="sbEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="730600160133160b121e031f165d101c1e">[email&#160;protected]</a></div>
+  </div>
+  <div class="sb-menu">
+    <div class="sb-item" onclick="location.href='#'">Profile</div>
+    <div class="sb-item" onclick="location.href='#'">Settings</div>
+    <div class="sb-item" onclick="location.href='#about';toggleSidebar()">About</div>
+    <div class="sb-item" id="adminItem" style="display:none" onclick="location.href='admin.html'">Admin Dashboard</div>
+  </div>
+  <div class="sb-foot">
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-tag"><span></span>Partido, Camarines Sur</div>
+    <h1>Real-Time <em>Material Quantity</em> & Cost Estimation</h1>
+    <p> Speed up your construction
+planning with instant material estimates
+and real-time pricing from local suppliers in
+the Partido Area.</p>
+    <div class="hero-btns" id="heroBtns">
+      <button class="hero-btn-primary" onclick="checkAuth('estimation.html')">Start Estimating</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="num">4+</div><div class="lbl">Local Suppliers</div></div>
+      <div class="stat"><div class="num">Live</div><div class="lbl">Price Updates</div></div>
+      <div class="stat"><div class="num">Free</div><div class="lbl">To Use</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="section">
+  <div class="sec-tag">Process</div>
+  <h2 class="sec-title">How It Works</h2>
+  <p class="sec-sub">Three simple steps to get your full material cost estimate, powered by real supplier data.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num-badge">1</div>
+      <h3>Input Dimensions</h3>
+      <p>Enter floor area, wall height, dimensions of beams and columns, and more based on your floor plan.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num-badge">2</div>
+      <h3>Automatic Estimation</h3>
+      <p>The system computes required materials using civil-engineering formulas.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num-badge">3</div>
+      <h3>Material Quantity & Cost Estimation</h3>
+      <p>
+Compute required material quantities and total costs
+using real-time supplier prices.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div style="background:var(--card);padding:80px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <div class="sec-tag">Features</div>
+    <h2 class="sec-title">Main Features</h2>
+    <p class="sec-sub">Everything you need to plan and budget your construction project.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3>Estimation Engine</h3>
+        <p>Automatically calculates materials from your project dimensions using proven civil engineering formulas.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Supplier Directory</h3>
+        <p>Browse a verified local suppliers in the Partido Area with up-to-date catalogs.</p>
+      </div>
+      <div class="feature-card">
+        <h3> Total Cost Estimation </h3>
+        <p>Automatically computes the total project
+cost based on material quantities and
+updated prices.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPLIERS PREVIEW -->
+<div class="section">
+  <div class="sec-tag">Suppliers</div>
+  <h2 class="sec-title">Featured Suppliers</h2>
+  <p class="sec-sub">Trusted construction material suppliers serving the Partido Area.</p>
+  <div class="sup-grid">
+    <div class="sup-card"><div class="sup-avatar">HW</div><div><div class="sup-name">Tigaon Hardware Center</div><div class="sup-loc">Tigaon</div></div></div>
+    <div class="sup-card"><div class="sup-avatar">GC</div><div><div class="sup-name">Goa Construction Supply</div><div class="sup-loc">Goa</div></div></div>
+    <div class="sup-card"><div class="sup-avatar">LB</div><div><div class="sup-name">San Jose Lumber</div><div class="sup-loc">San Jose</div></div></div>
+    <div class="sup-card"><div class="sup-avatar">BL</div><div><div class="sup-name">Lagonoy Builders</div><div class="sup-loc">Lagonoy</div></div></div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div class="section" id="about">
+  <div class="about-wrap">
+    <h2>About COSTruct</h2>
+    <p> COSTruct is a real-time construction
+cost estimation interface that integrates supplier
+and buyer functionalities with dynamic materials
+quantity and cost estimation capabilities.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>COSTruct</strong> &nbsp;·&nbsp; © 2025 &nbsp;·&nbsp; Developed for Thesis Purposes &nbsp;·&nbsp; Partido, Camarines Sur
+</footer>
+
+<script type="module">
+import { supabase, getCurrentUser, signOutAndGo } from './supabase-client.js';
+
+let currentUser = null;
+
+async function init() {
+  currentUser = await getCurrentUser();
+  if (currentUser) {
+    // Logged in — show nav links and burger menu
+    document.getElementById('navLinks').style.display = 'flex';
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('burgerBtn').style.display = 'flex';
+    document.getElementById('sbName').textContent = currentUser.name;
+    document.getElementById('sbEmail').textContent = currentUser.email;
+    document.querySelector('.sb-avatar').textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
+    if (currentUser.role === 'supplier') document.getElementById('adminItem').style.display = 'flex';
+    document.getElementById('heroBtns').innerHTML =
+      `<button class="hero-btn-primary" onclick="location.href='estimation.html'">Start Estimation</button>`;
+  } else {
+    // Guest
+    document.getElementById('heroBtns').innerHTML =
+      `<button class="hero-btn-primary" onclick="startSurvey()">Start Estimating</button>`;
+    document.getElementById('navLinks').style.display = 'none';
+    document.getElementById('burgerBtn').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'flex';
+    document.querySelector('nav').classList.add('guest-nav');
+    document.querySelector('.logo').classList.add('logo-center');
+  }
+}
+
+function checkAuth(url) {
+  if (!currentUser) { document.getElementById('lockWrap').classList.add('on'); }
+  else { location.href = url; }
+}
+function closeLock() { document.getElementById('lockWrap').classList.remove('on'); }
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('on');
+  document.getElementById('overlay').classList.toggle('on');
+}
+async function doLogout() {
+  if (confirm('Logout?')) {
+    await supabase.auth.signOut();
+    location.reload();
+  }
+}
+
+// React to auth changes (login in another tab, token refresh, etc.)
+supabase.auth.onAuthStateChange((_event, _session) => {
+  // Re-run init to update the UI
+  init();
+});
+
+// Expose for inline handlers
+window.checkAuth = checkAuth;
+window.closeLock = closeLock;
+window.toggleSidebar = toggleSidebar;
+window.doLogout = doLogout;
+
+
+//  SURVEY 
+const surveySteps = [
+  {
+    id: 'welcome',
+    type: 'welcome'
+  },
+  {
+    id: 'role',
+    question: 'How will you use COSTruct?',
+    sub: 'This helps us personalize your experience.',
+    options: [
+      { icon: '', title: 'I want to build or renovate', sub: 'I need to estimate materials for my project' },
+      { icon: '', title: 'I own a hardware or supply store', sub: 'I want to list my store and reach more buyers' },
+    ]
+  },
+  {
+    id: 'project',
+    question: 'What type of project are you planning?',
+    sub: 'Select the option that best describes your project.',
+    options: [
+      { icon: '', title: 'New House Construction', sub: 'Building a brand-new residential structure' },
+      { icon: '', title: 'Renovation or Extension', sub: 'Improving or expanding an existing home' },
+      { icon: '', title: 'Commercial Building', sub: 'For business or commercial purposes' },
+      { icon: '', title: 'Feasibility / Planning Only', sub: 'Just exploring costs for now' },
+    ]
+  },
+  {
+    id: 'size',
+    question: 'How large is your project?',
+    sub: 'Give us a rough estimate of the floor area.',
+    options: [
+      { icon: '', title: 'Small (below 50 sqm)', sub: 'Studio, small house, or extension' },
+      { icon: '', title: 'Medium (50–120 sqm)', sub: 'Standard house or bungalow' },
+      { icon: '', title: 'Large (120–300 sqm)', sub: 'Two-storey or bigger home' },
+      { icon: '', title: 'Very Large (300 sqm+)', sub: 'Commercial or multi-unit building' },
+    ]
+  },
+  {
+    id: 'timeline',
+    question: 'When are you planning to start construction?',
+    sub: 'This helps us understand how urgent your needs are.',
+    options: [
+      { icon: '', title: 'Very Soon (1–3 months)', sub: 'Ready to go and actively looking for suppliers' },
+      { icon: '', title: 'Within 6 months', sub: 'Still planning and assessing the budget' },
+      { icon: '', title: 'Within a year', sub: 'Early planning stage' },
+      { icon: '', title: 'Not sure yet', sub: 'Just exploring options for now' },
+    ]
+  },
+  {
+    id: 'auth',
+    type: 'auth'
+  }
+];
+
+let surveyStep = 0;
+let surveyAnswers = {};
+let surveySelected = null;
+
+function startSurvey() {
+  surveyStep = 0;
+  surveyAnswers = {};
+  surveySelected = null;
+  renderSurveyStep();
+  document.getElementById('surveyWrap').classList.add('on');
+}
+
+function closeSurvey() {
+  document.getElementById('surveyWrap').classList.remove('on');
+}
+
+function renderSurveyStep() {
+  const step = surveySteps[surveyStep];
+  const total = surveySteps.length;
+  const questionSteps = surveySteps.filter(s => !s.type);
+  const questionIndex = questionSteps.indexOf(step);
+
+  // Progress dots — only count question steps
+  document.getElementById('surveyProgress').innerHTML = questionSteps.map((_, i) =>
+    `<div class="survey-dot ${i <= questionIndex ? 'done' : ''}"></div>`
+  ).join('');
+
+  // Back button
+  document.getElementById('surveyBackBtn').style.display = surveyStep > 0 ? 'block' : 'none';
+
+  if (step.type === 'welcome') {
+    renderWelcome();
+    return;
+  }
+  if (step.type === 'auth') {
+    renderAuth();
+    return;
+  }
+
+  // Regular question step
+  surveySelected = surveyAnswers[step.id] ?? null;
+  document.getElementById('surveyStepLabel').textContent = `Step ${questionIndex + 1} of ${questionSteps.length}`;
+  document.getElementById('surveyQuestion').textContent = step.question;
+  document.getElementById('surveySub').textContent = step.sub || '';
+
+  document.getElementById('surveyOptions').innerHTML = step.options.map((o, i) =>
+    `<div class="survey-opt ${surveySelected === i ? 'selected' : ''}" onclick="selectSurveyOpt(${i})">
+      
+      <div class="survey-opt-text">
+        <span class="survey-opt-title">${o.title}</span>
+        <span class="survey-opt-sub">${o.sub}</span>
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('surveyOptionsWrap').style.display = 'block';
+  document.getElementById('surveyAuthWrap').style.display = 'none';
+  document.getElementById('surveyWelcomeWrap').style.display = 'none';
+
+  const nextBtn = document.getElementById('surveyNextBtn');
+  nextBtn.textContent = 'Continue →';
+  nextBtn.className = 'survey-next';
+  nextBtn.style.display = 'block';
+  nextBtn.disabled = surveySelected === null;
+}
+
+function renderWelcome() {
+  document.getElementById('surveyStepLabel').textContent = 'Welcome';
+  document.getElementById('surveyQuestion').textContent = 'Welcome to COSTruct!';
+  document.getElementById('surveySub').textContent = '';
+  document.getElementById('surveyOptionsWrap').style.display = 'none';
+  document.getElementById('surveyAuthWrap').style.display = 'none';
+  document.getElementById('surveyWelcomeWrap').style.display = 'block';
+  const nextBtn = document.getElementById('surveyNextBtn');
+  nextBtn.textContent = "Let's Get Started →";
+  nextBtn.className = 'survey-next survey-finish';
+  nextBtn.style.display = 'block';
+  nextBtn.disabled = false;
+  document.getElementById('surveyProgress').innerHTML = '';
+}
+
+function renderAuth() {
+  document.getElementById('surveyStepLabel').textContent = "You're all set!";
+  document.getElementById('surveyQuestion').textContent = 'Ready to start estimating?';
+  document.getElementById('surveySub').textContent = 'Create a free account or log in to access the full estimation tool.';
+  document.getElementById('surveyOptionsWrap').style.display = 'none';
+  document.getElementById('surveyWelcomeWrap').style.display = 'none';
+  document.getElementById('surveyAuthWrap').style.display = 'flex';
+  document.getElementById('surveyNextBtn').style.display = 'none';
+  document.getElementById('surveyProgress').innerHTML = surveySteps
+    .filter(s => !s.type)
+    .map(() => `<div class="survey-dot done"></div>`).join('');
+}
+
+function selectSurveyOpt(i) {
+  const step = surveySteps[surveyStep];
+  surveySelected = i;
+  surveyAnswers[step.id] = i;
+  document.querySelectorAll('.survey-opt').forEach((el, idx) => {
+    el.classList.toggle('selected', idx === i);
+  });
+  document.getElementById('surveyNextBtn').disabled = false;
+
+  // If user picks "hardware owner" on role step, skip project/size/timeline
+  if (step.id === 'role' && i === 1) {
+    surveyAnswers['project'] = null;
+    surveyAnswers['size'] = null;
+    surveyAnswers['timeline'] = null;
+  }
+}
+
+function surveyNext() {
+  const step = surveySteps[surveyStep];
+
+  // If hardware owner selected on role step, jump straight to auth
+  if (step.id === 'role' && surveyAnswers['role'] === 1) {
+    surveyStep = surveySteps.findIndex(s => s.type === 'auth');
+    renderSurveyStep();
+    return;
+  }
+
+  if (surveyStep < surveySteps.length - 1) {
+    surveyStep++;
+    surveySelected = surveyAnswers[surveySteps[surveyStep]?.id] ?? null;
+    renderSurveyStep();
+  }
+}
+
+function surveyBack() {
+  if (surveyStep > 0) {
+    // If we're on auth and user was a hardware owner, go back to role step
+    if (surveySteps[surveyStep].type === 'auth' && surveyAnswers['role'] === 1) {
+      surveyStep = surveySteps.findIndex(s => s.id === 'role');
+    } else {
+      surveyStep--;
+    }
+    surveySelected = surveyAnswers[surveySteps[surveyStep]?.id] ?? null;
+    renderSurveyStep();
+  }
+}
+//  END SURVEY 
+
+// Expose survey functions to window (needed for inline onclick)
+window.startSurvey = startSurvey;
+window.closeSurvey = closeSurvey;
+window.selectSurveyOpt = selectSurveyOpt;
+window.surveyNext = surveyNext;
+window.surveyBack = surveyBack;
+
+// Scroll animations
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('show'), i * 80);
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.step-card, .feature-card, .sup-card').forEach(el => obs.observe(el));
+
+init();
+</script>
+</body>
+</html>
