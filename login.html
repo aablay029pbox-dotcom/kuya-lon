@@ -51,6 +51,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
 .supplier-fields{border:1.5px solid var(--border);border-radius:12px;padding:16px;background:var(--bg);margin-bottom:16px}
 .supplier-fields-label{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px}
 
+
+
+
 .submit-btn{width:100%;padding:14px;background:var(--g800);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:.2s;margin-top:6px}
 .submit-btn:hover{background:var(--g600)}
 .switch-txt{text-align:center;font-size:14px;color:var(--ink3);margin-top:18px}
@@ -102,7 +105,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
         </div>
         <div class="field"><label>Email Address</label><input type="email" id="loginEmail" required placeholder="you@example.com"></div>
         <div class="field"><label>Password</label><input type="password" id="loginPw" required placeholder="••••••••"></div>
-        <button type="submit" class="submit-btn">Sign In</button>
+<button type="submit" class="submit-btn">Sign In</button>
         <p class="switch-txt">No account yet? <a href="#" onclick="switchPanel('panelReg')">Register here</a></p>
       </form>
     </div>
@@ -166,14 +169,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
 <script type="module">
 import { supabase } from './supabase-client.js';
 
-const PENDING_KEY = 'pending_registration_v1';
-
 function showAlert(id, msg, type) {
   const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'alert ' + type;
-  el.style.display = 'block';
-  setTimeout(() => (el.style.display = 'none'), 6000);
+  el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
 }
 
 function switchPanel(id) {
@@ -184,72 +183,6 @@ function switchPanel(id) {
 function toggleSupFields() {
   const role = document.querySelector('input[name="role"]:checked').value;
   document.getElementById('supFields').style.display = role === 'supplier' ? 'block' : 'none';
-}
-
-async function ensureProfileAndSupplier(user, pending) {
-  // If you have RLS enabled, you MUST have an authenticated session for these inserts.
-  // This function runs only after a successful login.
-
-  // Check if profile already exists
-  const { data: existing, error: existingErr } = await supabase
-    .from('profiles')
-    .select('id, role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (existingErr) {
-    console.error('profiles select:', existingErr);
-    // don't block login; just report
-    return { ok: false, message: 'Logged in, but failed to check profile table.' };
-  }
-
-  if (!existing) {
-    const { error: profileErr } = await supabase.from('profiles').insert({
-      id: user.id,
-      name: pending?.name ?? user.user_metadata?.name ?? '',
-      role: pending?.role ?? user.user_metadata?.role ?? 'buyer',
-      contact: pending?.contact ?? '',
-      address: pending?.address ?? ''
-    });
-
-    if (profileErr) {
-      console.error('profile insert:', profileErr);
-      return { ok: false, message: 'Logged in, but failed to save profile to database.' };
-    }
-  }
-
-  // Create supplier row if needed
-  const role = (pending?.role ?? existing?.role ?? user.user_metadata?.role ?? 'buyer');
-  if (role === 'supplier' && pending) {
-    const { data: supplierExisting } = await supabase
-      .from('suppliers')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!supplierExisting) {
-      const { error: supErr } = await supabase.from('suppliers').insert({
-        user_id: user.id,
-        email: pending.email,
-        name: pending.storeName,
-        owner_name: pending.name,
-        category: pending.cat,
-        location: pending.loc,
-        contact: pending.contact,
-        address: pending.address,
-        since: new Date().getFullYear().toString(),
-        delivery: 'Available',
-        rating: 0
-      });
-
-      if (supErr) {
-        console.error('supplier insert:', supErr);
-        return { ok: false, message: 'Logged in, but failed to save supplier info to database.' };
-      }
-    }
-  }
-
-  return { ok: true };
 }
 
 // ---------- LOGIN ----------
@@ -265,31 +198,18 @@ async function doLogin(e) {
     return;
   }
 
-  // Check role (from profiles if exists, else from metadata)
-  const { data: profile, error: profErr } = await supabase
+  // Check the role in profiles matches what the user selected
+  const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', data.user.id)
     .maybeSingle();
-
-  if (profErr) console.error('profiles role select:', profErr);
 
   const actualRole = profile?.role || data.user.user_metadata?.role || 'buyer';
   if (actualRole !== expectedRole) {
     await supabase.auth.signOut();
     showAlert('loginAlert', `This account is registered as a ${actualRole}, not a ${expectedRole}.`, 'error');
     return;
-  }
-
-  // If user registered while email confirmation was ON, we saved details locally.
-  // After they confirm email and log in, we can now write to your DB tables.
-  let pending = null;
-  try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch { pending = null; }
-
-  if (pending && pending.email?.toLowerCase() === email.toLowerCase()) {
-    const res = await ensureProfileAndSupplier(data.user, pending);
-    if (!res.ok) showAlert('loginAlert', res.message, 'error');
-    localStorage.removeItem(PENDING_KEY);
   }
 
   showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
@@ -316,7 +236,7 @@ async function doRegister(e) {
   if (pw !== pwConfirm)
     return showAlert('regAlert', 'Passwords do not match. Please try again.', 'error');
 
-  let storeName = null, cat = null, loc = null;
+  let storeName, cat, loc;
   if (role === 'supplier') {
     storeName = document.getElementById('storeName').value.trim();
     cat = document.getElementById('storeCategory').value;
@@ -324,46 +244,49 @@ async function doRegister(e) {
     if (!storeName) return showAlert('regAlert', 'Please enter your business name.', 'error');
   }
 
-  // Save everything locally so we can insert to DB AFTER login (important if Email Confirmation is ON).
-  const pending = { name, email, contact, address, role, storeName, cat, loc };
-  localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-
-  // 1) Sign up with Supabase Auth
+  // 1. Sign up with Supabase Auth
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password: pw,
     options: { data: { name, role } }
   });
-
   if (signUpError) {
     return showAlert('regAlert', signUpError.message || 'Registration failed.', 'error');
   }
 
-  // If your project has Email Confirmation enabled, session will be null here.
-  // In that case, DO NOT insert into tables (RLS will block). Ask user to confirm email and log in.
-  if (!signUpData.session) {
-    showAlert(
-      'regAlert',
-      'Account created! Please check your email to confirm your account, then come back and log in. (Your details will be saved after login.)',
-      'success'
-    );
-    setTimeout(() => {
-      switchPanel('panelLogin');
-      document.getElementById('loginEmail').value = email;
-      showAlert('loginAlert', 'After confirming your email, please sign in.', 'success');
-    }, 2500);
-    return;
+  const userId = signUpData.user?.id;
+  if (!userId) {
+    return showAlert('regAlert', 'Registration succeeded but no user was returned. Check email confirmation settings.', 'error');
   }
 
-  // If Email Confirmation is OFF, we already have a session and can write to DB now.
-  const user = signUpData.user;
-  const res = await ensureProfileAndSupplier(user, pending);
-  if (!res.ok) {
-    showAlert('regAlert', res.message || 'Registration succeeded, but database insert failed.', 'error');
-    return;
+  // NOTE: If "Confirm email" is enabled in Supabase, the user has no session yet
+  // and the RLS inserts below will fail. For dev, disable email confirmation in
+  // Dashboard → Authentication → Providers → Email, OR handle it server-side.
+
+  // 2. Create the profile row
+  const { error: profileErr } = await supabase.from('profiles').insert({
+    id: userId, name, role, contact, address
+  });
+  if (profileErr) console.error('profile insert:', profileErr);
+
+  // 3. If supplier, create the supplier row
+  if (role === 'supplier') {
+    const { error: supErr } = await supabase.from('suppliers').insert({
+      user_id: userId,
+      email,
+      name: storeName,
+      owner_name: name,
+      category: cat,
+      location: loc,
+      contact,
+      address,
+      since: new Date().getFullYear().toString(),
+      delivery: 'Available',
+      rating: 0
+    });
+    if (supErr) console.error('supplier insert:', supErr);
   }
 
-  localStorage.removeItem(PENDING_KEY);
   showAlert('regAlert', `Account created for ${name}! Redirecting to login...`, 'success');
   setTimeout(() => {
     switchPanel('panelLogin');
@@ -372,7 +295,8 @@ async function doRegister(e) {
   }, 2000);
 }
 
-// Expose to inline handlers
+
+// Expose to inline onclick handlers
 window.switchPanel = switchPanel;
 window.toggleSupFields = toggleSupFields;
 window.doLogin = doLogin;
