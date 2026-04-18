@@ -51,6 +51,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
 .supplier-fields{border:1.5px solid var(--border);border-radius:12px;padding:16px;background:var(--bg);margin-bottom:16px}
 .supplier-fields-label{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px}
 
+
+
+
 .submit-btn{width:100%;padding:14px;background:var(--g800);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:.2s;margin-top:6px}
 .submit-btn:hover{background:var(--g600)}
 .switch-txt{text-align:center;font-size:14px;color:var(--ink3);margin-top:18px}
@@ -84,6 +87,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
   </div>
 
   <div class="right">
+    <!-- LOGIN PANEL -->
     <div class="form-panel active" id="panelLogin">
       <h2 class="form-title">Welcome back</h2>
       <p class="form-sub">Sign in to continue to COSTruct</p>
@@ -99,13 +103,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
             <label for="lrSupplier">Supplier</label>
           </div>
         </div>
-        <div class="field"><label>Email Address</label><input type="email" id="loginEmail" required></div>
-        <div class="field"><label>Password</label><input type="password" id="loginPw" required></div>
-        <button type="submit" class="submit-btn">Sign In</button>
+        <div class="field"><label>Email Address</label><input type="email" id="loginEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPw" required placeholder="••••••••"></div>
+<button type="submit" class="submit-btn">Sign In</button>
         <p class="switch-txt">No account yet? <a href="#" onclick="switchPanel('panelReg')">Register here</a></p>
       </form>
     </div>
 
+    <!-- REGISTER PANEL -->
     <div class="form-panel" id="panelReg">
       <h2 class="form-title">Create account</h2>
       <p class="form-sub">Choose your role to get started</p>
@@ -121,18 +126,41 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
             <label for="rrSupplier">Supplier</label>
           </div>
         </div>
-
-        <div class="field"><label>Full Name</label><input type="text" id="regName" required></div>
-        <div class="field"><label>Email Address</label><input type="email" id="regEmail" required></div>
-        <div class="field"><label>Contact Number</label><input type="tel" id="regContact" required></div>
-        <div class="field"><label>House Address</label><input type="text" id="regAddress" required></div>
-
+        <div class="field"><label>Full Name</label><input type="text" id="regName" required placeholder="Juan dela Cruz"></div>
+        <div class="field"><label>Email Address</label><input type="email" id="regEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Contact Number</label><input type="tel" id="regContact" required placeholder="e.g. 09XX XXX XXXX"></div>
+        <div class="field"><label>House Address</label><input type="text" id="regAddress" required placeholder="House No., Street, Barangay, Municipality"></div>
         <div class="field-row">
-          <div class="field"><label>Password</label><input type="password" id="regPw" required></div>
-          <div class="field"><label>Confirm Password</label><input type="password" id="regPwConfirm" required></div>
+          <div class="field"><label>Password</label><input type="password" id="regPw" required placeholder="min 6 characters"></div>
+          <div class="field"><label>Confirm Password</label><input type="password" id="regPwConfirm" required placeholder="re-enter password"></div>
         </div>
-
+        <div id="supFields" style="display:none">
+          <div class="supplier-fields">
+            <div class="supplier-fields-label">Store / Business Info</div>
+            <div class="field"><label>Business Name</label><input type="text" id="storeName" placeholder="e.g. Juan's Hardware"></div>
+            <div class="field-row">
+              <div class="field"><label>Category</label>
+                <select id="storeCategory">
+                  <option value="construction">General Construction</option>
+                  <option value="hardware">Hardware</option>
+                  <option value="lumber">Lumber & Wood</option>
+                  <option value="cement">Cement & Aggregates</option>
+                </select>
+              </div>
+              <div class="field"><label>Location</label>
+                <select id="storeLoc">
+                  <option value="Tigaon">Tigaon</option>
+                  <option value="Goa">Goa</option>
+                  <option value="San Jose">San Jose</option>
+                  <option value="Lagonoy">Lagonoy</option>
+                  <option value="Sagnay">Sagnay</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
         <button type="submit" class="submit-btn">Create Account</button>
+        <p class="switch-txt">Already have an account? <a href="#" onclick="switchPanel('panelLogin')">Sign in</a></p>
       </form>
     </div>
   </div>
@@ -141,18 +169,138 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
 <script type="module">
 import { supabase } from './supabase-client.js';
 
-function switchPanel(id){
-  document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active'));
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function switchPanel(id) {
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-function toggleSupFields(){
-  const role=document.querySelector('input[name="role"]:checked').value;
-  document.getElementById('supFields')?.style && (document.getElementById('supFields').style.display = role==='supplier'?'block':'none');
+function toggleSupFields() {
+  const role = document.querySelector('input[name="role"]:checked').value;
+  document.getElementById('supFields').style.display = role === 'supplier' ? 'block' : 'none';
 }
 
-window.switchPanel=switchPanel;
-window.toggleSupFields=toggleSupFields;
+// ---------- LOGIN ----------
+async function doLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const expectedRole = document.querySelector('input[name="loginRole"]:checked').value;
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    showAlert('loginAlert', error.message || 'Invalid email or password.', 'error');
+    return;
+  }
+
+  // Check the role in profiles matches what the user selected
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  const actualRole = profile?.role || data.user.user_metadata?.role || 'buyer';
+  if (actualRole !== expectedRole) {
+    await supabase.auth.signOut();
+    showAlert('loginAlert', `This account is registered as a ${actualRole}, not a ${expectedRole}.`, 'error');
+    return;
+  }
+
+  showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
+  setTimeout(() => {
+    location.href = actualRole === 'supplier' ? 'admin.html' : 'index.html';
+  }, 1200);
+}
+
+// ---------- REGISTER ----------
+async function doRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const contact = document.getElementById('regContact').value.trim();
+  const address = document.getElementById('regAddress').value.trim();
+  const pw = document.getElementById('regPw').value;
+  const pwConfirm = document.getElementById('regPwConfirm').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+
+  if (!name || !email || !contact || !address || !pw || !pwConfirm)
+    return showAlert('regAlert', 'Please fill all fields.', 'error');
+  if (pw.length < 6)
+    return showAlert('regAlert', 'Password must be at least 6 characters.', 'error');
+  if (pw !== pwConfirm)
+    return showAlert('regAlert', 'Passwords do not match. Please try again.', 'error');
+
+  let storeName, cat, loc;
+  if (role === 'supplier') {
+    storeName = document.getElementById('storeName').value.trim();
+    cat = document.getElementById('storeCategory').value;
+    loc = document.getElementById('storeLoc').value;
+    if (!storeName) return showAlert('regAlert', 'Please enter your business name.', 'error');
+  }
+
+  // 1. Sign up with Supabase Auth
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password: pw,
+    options: { data: { name, role } }
+  });
+  if (signUpError) {
+    return showAlert('regAlert', signUpError.message || 'Registration failed.', 'error');
+  }
+
+  const userId = signUpData.user?.id;
+  if (!userId) {
+    return showAlert('regAlert', 'Registration succeeded but no user was returned. Check email confirmation settings.', 'error');
+  }
+
+  // NOTE: If "Confirm email" is enabled in Supabase, the user has no session yet
+  // and the RLS inserts below will fail. For dev, disable email confirmation in
+  // Dashboard → Authentication → Providers → Email, OR handle it server-side.
+
+  // 2. Create the profile row
+  const { error: profileErr } = await supabase.from('profiles').insert({
+    id: userId, name, role, contact, address
+  });
+  if (profileErr) console.error('profile insert:', profileErr);
+
+  // 3. If supplier, create the supplier row
+  if (role === 'supplier') {
+    const { error: supErr } = await supabase.from('suppliers').insert({
+      user_id: userId,
+      email,
+      name: storeName,
+      owner_name: name,
+      category: cat,
+      location: loc,
+      contact,
+      address,
+      since: new Date().getFullYear().toString(),
+      delivery: 'Available',
+      rating: 0
+    });
+    if (supErr) console.error('supplier insert:', supErr);
+  }
+
+  showAlert('regAlert', `Account created for ${name}! Redirecting to login...`, 'success');
+  setTimeout(() => {
+    switchPanel('panelLogin');
+    document.getElementById('loginEmail').value = email;
+    showAlert('loginAlert', 'Registration successful. Please log in.', 'success');
+  }, 2000);
+}
+
+
+// Expose to inline onclick handlers
+window.switchPanel = switchPanel;
+window.toggleSupFields = toggleSupFields;
+window.doLogin = doLogin;
+window.doRegister = doRegister;
 </script>
 </body>
 </html>
