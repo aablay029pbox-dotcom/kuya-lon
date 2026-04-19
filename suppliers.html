@@ -243,7 +243,7 @@ select:focus{border-color:var(--g600)}
   // ---- Init ----
   async function init() {
     // 1. Session / user UI
-    currentUser = await loadCurrentUser();
+   currentUser = await getCurrentUser();
     if (currentUser) {
       document.getElementById('loginBtn').style.display = 'none';
       document.getElementById('burgerBtn').style.display = 'flex';
