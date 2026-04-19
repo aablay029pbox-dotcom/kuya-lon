@@ -383,23 +383,7 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
   <!-- ── FLOORING AREA ── -->
   <div class="card">
     <div class="card-title"><span class="ct-icon">D</span> Ground Floor Slab</div>
-    <div class="info-note">Enter flooring dimensions. Area = Length × Width. Adding flooring is optional.</div>
-
-    <!-- Dimension sub-section -->
-    <div style="font-size:11px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Dimension</div>
-    <div class="field-row-3">
-      <div class="field"><label>Length (m)</label><input type="number" id="fLength" placeholder="10" step="0.1" min="0" inputmode="decimal" oninput="updateFlooringArea()"></div>
-      <div class="field"><label>Width (m)</label><input type="number" id="fWidth" placeholder="8" step="0.1" min="0" inputmode="decimal" oninput="updateFlooringArea()"></div>
-      <div class="field"><label>Thickness (m)</label><input type="number" id="fThickness" placeholder="0.1" step="0.01" min="0" inputmode="decimal" oninput="updateFlooringArea()"></div>
-    </div>
-    <div class="rec-box" id="flooringAreaBox">
-      <div class="rec-title">Flooring Computation</div>
-      <div class="rec-row"><span class="rec-label">Flooring Area</span><span class="rec-val" id="flooringAreaVal">— m²</span></div>
-      <div class="rec-row"><span class="rec-label">Slab Area</span><span class="rec-val" id="slabAreaVal">— m²</span></div>
-    </div>
-
-    <!-- Flooring list (optional) -->
-    <div style="font-size:11px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border)">Ground Floor Slab <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink3)">(optional)</span></div>
+    <div class="info-note">Add each ground floor slab section. Click "+ Add Ground Floor Slab" to begin.</div>
     <div class="floors-list" id="floorsList"></div>
     <button class="add-floor-btn" onclick="addFloor()">+ Add Ground Floor Slab</button>
   </div>
@@ -407,23 +391,7 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
   <!-- ── SLAB ── -->
   <div class="card">
     <div class="card-title"><span class="ct-icon">S</span> Slab</div>
-    <div class="info-note">Enter slab dimensions. Volume = Length × Width × Thickness.</div>
-
-    <!-- Dimension sub-section -->
-    <div style="font-size:11px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Dimension</div>
-    <div class="field-row">
-      <div class="field"><label>Length (m)</label><input type="number" id="sLength" placeholder="10" step="0.1" min="0" inputmode="decimal" oninput="updateSlabSection()"></div>
-      <div class="field"><label>Width (m)</label><input type="number" id="sWidth" placeholder="8" step="0.1" min="0" inputmode="decimal" oninput="updateSlabSection()"></div>
-      <div class="field"><label>Thickness (m)</label><input type="number" id="sThick" placeholder="0.1" step="0.01" min="0" inputmode="decimal" oninput="updateSlabSection()"></div>
-    </div>
-    <div class="rec-box" id="slabAreaBox">
-      <div class="rec-title">Slab Computation</div>
-      <div class="rec-row"><span class="rec-label">Slab Area</span><span class="rec-val" id="slabComputeAreaVal">— m²</span></div>
-      <div class="rec-row"><span class="rec-label">Slab Volume</span><span class="rec-val" id="slabComputeVolVal">— m³</span></div>
-    </div>
-
-    <!-- Slabs list (optional) -->
-    <div style="font-size:11px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border)">Additional Slabs <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink3)">(optional)</span></div>
+    <div class="info-note">Add each slab section. Click "+ Add Slab" to begin.</div>
     <div class="floors-list" id="slabsList"></div>
     <button class="add-floor-btn" onclick="addSlab()">+ Add Slab</button>
   </div>
@@ -980,24 +948,6 @@ function calculate(){
   // ── Totals across all floors ──
   let totalArea=0,totalFoundVol=0,groundFloorSlabVol=0,additionalSlabsVol=0,totalNails=0,totalS16=0,totalTiles=0,totalGiSheets=0,totalLumber=0;
 
-  // Include the top-level dimension inputs (fLength/fWidth/fThickness) as a ground floor slab
-  // even if the user didn't click "+ Add Ground Floor Slab"
-  const dimL=parseFloat(document.getElementById('fLength').value)||0;
-  const dimW=parseFloat(document.getElementById('fWidth').value)||0;
-  const dimT=parseFloat(document.getElementById('fThickness').value)||0;
-  if(dimL>0 && dimW>0 && dimT>0){
-    const dimArea=dimL*dimW;
-    totalArea+=dimArea;
-    totalFoundVol+=dimArea*1.1*0.15;
-    groundFloorSlabVol+=dimArea*dimT;
-    totalNails+=Math.ceil(dimArea/10);
-    totalS16+=Math.ceil(dimArea/2);
-    if(tileSize!=='none'){
-      const tsm=tileSize==='60x60'?0.36:0.09;
-      totalTiles+=Math.ceil(dimArea/tsm);
-    }
-  }
-
   floors.forEach((f,idx)=>{
     const area=f.length*f.width;
     totalArea+=area;
@@ -1014,14 +964,6 @@ function calculate(){
     if(inclRoof&&idx===floors.length-1){totalGiSheets+=Math.ceil((area*1.2)/2.5);totalLumber+=Math.ceil(area/2);}
   });
   
-  // Add the top-level Slab dimension inputs (sLength/sWidth/sThick) even if no additional slabs added
-  const slabDimL=parseFloat(document.getElementById('sLength').value)||0;
-  const slabDimW=parseFloat(document.getElementById('sWidth').value)||0;
-  const slabDimT=parseFloat(document.getElementById('sThick').value)||0;
-  if(slabDimL>0 && slabDimW>0 && slabDimT>0){
-    additionalSlabsVol+=slabDimL*slabDimW*slabDimT;
-  }
-
   // Add volumes from additional slabs (tracked separately)
   slabEntries.forEach(s=>{
     const vol=(s.length||0)*(s.width||0)*(s.thickness||0);
@@ -1242,10 +1184,9 @@ function calculate(){
     </div>`;
   }
 
-  const slabDisplayArea = totalArea>0 ? totalArea : (slabDimL*slabDimW>0 ? slabDimL*slabDimW : 0);
   const breakdownHTML=
     catBlock('','GROUND FLOOR SLAB',fSec2.length?`(${fSec2.length} item${fSec2.length>1?'s':''} from supplier)`:'(supplier items only)',fSec2,cost2)+
-    catBlock('','SLAB',slabDisplayArea>0?`(${slabDisplayArea.toFixed(1)} m\u00B2)`:'',fSec1,cost1)+
+    catBlock('','SLAB',totalArea>0||additionalSlabsVol>0?`(${totalArea.toFixed(1)} m\u00B2)`:'',fSec1,cost1)+
     catBlock('','STRUCTURAL ELEMENTS',totalColCount||totalBeamCount?`(${totalColCount} col \u00B7 ${totalBeamCount} beams)`:'',fSec3,cost3)+
     catBlock('','WALLS AND FINISHES',wallSummary.length?`(${wallSummary.length} section${wallSummary.length>1?'s':''})`:'',fSec4,cost4,matRowsHierarchy)+
     customMatHTML;
@@ -1565,7 +1506,6 @@ async function renderSavedList(){
       e.savedAt
     ].filter(Boolean);
     const safeId = String(e.id);
-    // Use a data attribute but attach onclick directly to avoid conflicts with breakdown HTML content
     return `<div class="est-card" data-card="${escapeHtml(safeId)}">
       <div class="est-card-head" data-toggle="${escapeHtml(safeId)}">
         <div class="est-icon">${escapeHtml(initials)}</div>
@@ -1576,7 +1516,7 @@ async function renderSavedList(){
         <div class="est-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <div class="est-total">${escapeHtml(e.total)}</div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button class="est-del-btn" onclick="event.stopPropagation();deleteEst('${escapeHtml(safeId)}')" style="margin:0;padding:4px 10px;font-size:12px">🗑 Delete</button>
+            <button class="est-del-btn" data-del-id="${escapeHtml(safeId)}" style="margin:0;padding:4px 10px;font-size:12px">🗑 Delete</button>
             <div class="est-chevron">▼</div>
           </div>
         </div>
@@ -1587,12 +1527,24 @@ async function renderSavedList(){
     </div>`;
   }).join('');
 
-  // Wire toggle handlers (delete uses inline onclick)
-  list.querySelectorAll('[data-toggle]').forEach(el => {
-    el.addEventListener('click', (ev) => {
-      if(ev.target.closest('.est-del-btn')) return;
-      toggleEstBody(el.getAttribute('data-toggle'));
-    });
+  // Wire toggle and delete handlers — scoped strictly to .est-card-head buttons, not breakdown content
+  list.querySelectorAll('.est-card').forEach(card => {
+    const id = card.getAttribute('data-card');
+    const head = card.querySelector('.est-card-head');
+    const delBtn = head ? head.querySelector('[data-del-id]') : null;
+
+    if(head){
+      head.addEventListener('click', (ev) => {
+        if(ev.target.closest('[data-del-id]')) return;
+        toggleEstBody(id);
+      });
+    }
+    if(delBtn){
+      delBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        deleteEst(delBtn.getAttribute('data-del-id'));
+      });
+    }
   });
 }
 
@@ -1604,17 +1556,28 @@ function toggleEstBody(id){
 
 async function deleteEst(id){
   if(!confirm('Delete this estimate?')) return;
-  // Re-fetch session in case currentUser wasn't ready yet
   if(!currentUser) currentUser = await getCurrentUser();
   if (currentUser) {
-    const { error } = await supabase.from('estimates').delete().eq('id', id).eq('user_id', currentUser.id);
-    if (error) { alert('Failed to delete: ' + error.message); return; }
+    const { error, count } = await supabase
+      .from('estimates')
+      .delete({ count: 'exact' })
+      .eq('id', id)
+      .eq('user_id', currentUser.id);
+    if (error) {
+      alert('Delete failed: ' + error.message + '\n\nMake sure your Supabase "estimates" table has a DELETE policy for authenticated users.');
+      return;
+    }
+    if (count === 0) {
+      // RLS silently blocked — try without user_id filter as fallback
+      const { error: e2 } = await supabase.from('estimates').delete().eq('id', id);
+      if (e2) { alert('Delete failed (RLS): ' + e2.message); return; }
+    }
   } else {
     let saved=JSON.parse(localStorage.getItem('costruct_estimates_guest')||'[]');
     saved=saved.filter(e=>String(e.id)!==String(id));
     localStorage.setItem('costruct_estimates_guest',JSON.stringify(saved));
   }
-  renderSavedList();
+  await renderSavedList();
 }
 
 // Expose ALL functions used by inline onclick= handlers and cross-module references
