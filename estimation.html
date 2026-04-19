@@ -473,6 +473,10 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
     <p>Click <strong>Calculate</strong> to view results</p>
   </div>
   <div id="resultsContent" style="display:none">
+    <div id="noMatNotice" style="display:none;background:#fffbea;border:1.5px solid #f6e05e;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#744210;line-height:1.6">
+      <strong>No materials found from this supplier.</strong><br>
+      The selected supplier hasn't added materials to their catalog yet, or their items don't match the required categories. Ask them to add materials in their Admin Dashboard.
+    </div>
 
     <div class="result-hero">
       <div class="big-label">Total Project Cost</div>
@@ -881,28 +885,26 @@ function calculate(){
   const tileSize=document.getElementById('tileSize').value;
   const inclRoof=document.getElementById('roofing').value==='yes';
   const cementType=document.getElementById('cementType').value;
-  // Use supplier price if matched, otherwise fall back to DEFAULT_PRICES
-  function getPrice(inputId, defaultKey){
-    const v = parseFloat(document.getElementById(inputId)?.value);
-    if(v && v > 0) return v;
-    return DEFAULT_PRICES[defaultKey] || DEFAULT_PRICES[inputId] || 0;
+  // Use ONLY prices from the selected supplier's catalog (no defaults)
+  function getPrice(inputId){
+    return parseFloat(document.getElementById(inputId)?.value) || 0;
   }
-  const portlandPrice = getPrice('pCementPortland','pCementPortland');
-  const pozzolanPrice = getPrice('pCementPozzolan','pCementPozzolan');
+  const portlandPrice = getPrice('pCementPortland');
+  const pozzolanPrice = getPrice('pCementPozzolan');
   const P={
-    sand:     getPrice('pSand','pSand'),
-    gravel:   getPrice('pGravel','pGravel'),
-    s10:      getPrice('pSteel10','pSteel10'),
-    s12:      getPrice('pSteel12','pSteel12'),
-    s16:      getPrice('pSteel16','pSteel16'),
-    chb4:     getPrice('pChb4','pChb4'),
-    chb6:     getPrice('pChb6','pChb6'),
-    tile:     getPrice('pTile','pTile'),
-    gi:       getPrice('pGi','pGi'),
-    lumber:   getPrice('pLumber','pLumber'),
-    woodPanel:getPrice('pWoodPanel','pWoodPanel'),
-    nails:    getPrice('pNails','pNails'),
-    wire:     getPrice('pWire','pWire'),
+    sand:     getPrice('pSand'),
+    gravel:   getPrice('pGravel'),
+    s10:      getPrice('pSteel10'),
+    s12:      getPrice('pSteel12'),
+    s16:      getPrice('pSteel16'),
+    chb4:     getPrice('pChb4'),
+    chb6:     getPrice('pChb6'),
+    tile:     getPrice('pTile'),
+    gi:       getPrice('pGi'),
+    lumber:   getPrice('pLumber'),
+    woodPanel:getPrice('pWoodPanel'),
+    nails:    getPrice('pNails'),
+    wire:     getPrice('pWire'),
   };
 
   function matRows(list){
@@ -922,9 +924,10 @@ function calculate(){
     }).join('');
   }
   
-  // Always show all calculated items.
-  // supplierAvailMap only controls which PRICE was used (supplier price vs default).
-  function filtered(list){ return list; }
+  // Only show items that the selected supplier actually carries in their catalog
+  function filtered(list){
+    return list.filter(m => !m.field || supplierAvailMap[m.field] === true);
+  }
   function catCost(list){return list.reduce((s,m)=>s+(m.cost||0),0);}
 
   // ── Totals across all floors ──
@@ -1137,7 +1140,7 @@ function calculate(){
         <span>₱${fmt(cost)}</span>
       </div>
       <div class="floor-result-body">
-        ${matList.length?rfn(matList):'<div style="font-size:12px;color:var(--ink3);padding:6px 0;font-style:italic">No items to display. Add floors, columns, walls, or other elements in Step 2.</div>'}
+        ${matList.length?rfn(matList):'<div style="font-size:12px;color:var(--ink3);padding:6px 0;font-style:italic">This supplier has no catalog entry for this material type.</div>'}
       </div>
     </div>`;
   }
@@ -1154,6 +1157,8 @@ function calculate(){
   const setHTML=(id,val)=>{const el=document.getElementById(id);if(el)el.innerHTML=val;};
 
   setText('rTotal','₱'+fmt(grandMaterialCost));
+  const noMatNotice = document.getElementById('noMatNotice');
+  if(noMatNotice) noMatNotice.style.display = grandMaterialCost === 0 ? 'block' : 'none';
 
   const projNameEl=document.getElementById('projName');
   setText('rProjName',(projNameEl&&projNameEl.value)||'Untitled Project');
