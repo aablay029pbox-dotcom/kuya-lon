@@ -151,7 +151,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(5,32,22,0.96
           </select>
         </div>
       </div>
-      <div class="materials-grid" id="matsGrid"></div>
+      <div class="materials-grid" id="matsGrid">
+        <div id="loadingState" style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink3)">
+          <div style="display:inline-block;width:28px;height:28px;border:3px solid var(--g100);border-top-color:var(--g600);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px"></div>
+          <div style="font-size:14px">Loading materials...</div>
+        </div>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
       <div id="emptyState" class="empty-state" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0H4"/></svg>
         <h3>No Materials Listed</h3>
@@ -253,8 +259,11 @@ async function init() {
 function renderMats(list) {
   const g = document.getElementById('matsGrid');
   const e = document.getElementById('emptyState');
-  if (!list.length) { g.innerHTML = ''; e.style.display = 'block'; return; }
+  if (!list.length) { g.innerHTML = ''; e.style.display = 'block'; const ld=document.getElementById('loadingState'); if(ld)ld.remove(); return; }
   e.style.display = 'none';
+  // Clear loading spinner if still present
+  const loader = document.getElementById('loadingState');
+  if (loader) loader.remove();
   g.innerHTML = list.map(m => {
     const qty = m.qty;
     let sc, sl;
