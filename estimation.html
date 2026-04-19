@@ -953,16 +953,18 @@ function calculate(){
       if(m.isHeader){
         return `<div class="mat-line" style="font-weight:600;padding:8px 0 4px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:8px"><span class="mn">${m.name}</span></div>`;
       } else if(m.indent){
-        return `<div class="mat-line" style="padding-left:20px"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">&#8369;${fmt(m.cost)}</span></span></div>`;
+        const priceHTML = m.cost>0 ? `<span class="mc">&#8369;${fmt(m.cost)}</span>` : '';
+        return `<div class="mat-line" style="padding-left:20px"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span>${priceHTML}</span></div>`;
       } else {
-        return `<div class="mat-line"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">&#8369;${fmt(m.cost)}</span></span></div>`;
+        const priceHTML = m.cost>0 ? `<span class="mc">&#8369;${fmt(m.cost)}</span>` : '';
+        return `<div class="mat-line"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span>${priceHTML}</span></div>`;
       }
     }).join('');
   }
 
-  // Only include items the supplier actually has in their catalog; always pass section headers
+  // Only include items the supplier actually has in their catalog; always pass headers and alwaysShow items
   function filtered(list){
-    return list.filter(m => m.isHeader || m.has === true);
+    return list.filter(m => m.isHeader || m.alwaysShow || m.has === true);
   }
   function catCost(list){return list.reduce((s,m)=>s+(m.cost||0),0);}
 
@@ -1143,7 +1145,8 @@ function calculate(){
   // Organize into hierarchy
   if(chbItems.length){
     sec4Mats.push({name:'CHB',isHeader:true});
-    sec4Mats.push(...chbItems);
+    // CHB items always shown with quantity (price shown only if supplier has it)
+    sec4Mats.push(...chbItems.map(c=>({...c, indent:true, alwaysShow:true})));
   }
   if(mortarItems.length){
     sec4Mats.push({name:'MORTAR',isHeader:true});
