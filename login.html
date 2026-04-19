@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login – COSTruct</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
-
-<style>:root{--g900:#052016;--g800:#0a3d2b;--g600:#0f5a3f;--g400:#1a8a5e;--g200:#a8dfc7;--g100:#d4f0e3;--g50:#edf8f3;--ink:#111816;--ink2:#3a4a42;--ink3:#6b7a72;--bg:#f2f5f3;--border:#dde8e2;--red:#dc3545}
+<style>
+:root{--g900:#052016;--g800:#0a3d2b;--g600:#0f5a3f;--g400:#1a8a5e;--g200:#a8dfc7;--g100:#d4f0e3;--g50:#edf8f3;--ink:#111816;--ink2:#3a4a42;--ink3:#6b7a72;--bg:#f2f5f3;--border:#dde8e2;--red:#dc3545}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .wrap{display:grid;grid-template-columns:1fr 1.4fr;max-width:920px;width:100%;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(10,61,43,0.14)}
@@ -69,30 +68,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:
   .field-row{grid-template-columns:1fr}
   .logo{font-size:22px}
 }
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#f2f5f3;display:flex;align-items:center;justify-content:center;height:100vh}
-.wrap{display:grid;grid-template-columns:1fr 1.4fr;max-width:900px;width:100%;background:#fff;border-radius:20px;overflow:hidden}
-.left{background:#052016;color:#fff;padding:40px}
-.right{padding:40px}
-.form-panel{display:none}
-.form-panel.active{display:block}
-.alert{padding:10px;margin-bottom:10px;display:none}
-.alert.success{background:#d4edda}
-.alert.error{background:#fde8e8}
 </style>
 </head>
-
 <body>
-
 <div class="wrap">
-
   <div class="left">
-    <h2>COSTruct</h2>
-    <p>Plan Fast. Build Smart.</p>
+    <div class="left-bg"></div>
+    <div class="left-bg2"></div>
+    <div class="logo">CO<span>S</span>Truct</div>
+    <div class="left-mid">
+      <h2>Plan Fast.<br>Build<em>Smart.</em></h2>
+      <h2>Save More.</h2>
+      <p>Real-time material quantity and cost estimation for construction projects in the Partido Area.</p>
+    </div>
+    <div class="left-foot">
+      <a href="index.html">← Back to homepage</a>
+    </div>
   </div>
 
   <div class="right">
-
-    <!-- LOGIN -->
+    <!-- LOGIN PANEL -->
     <div class="form-panel active" id="panelLogin">
       <h2 class="form-title">Welcome back</h2>
       <p class="form-sub">Sign in to continue to COSTruct</p>
@@ -115,8 +110,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f2f5f3;display:flex;
       </form>
     </div>
 
-    <!-- REGISTER -->
- <div class="form-panel" id="panelReg">
+    <!-- REGISTER PANEL -->
+    <div class="form-panel" id="panelReg">
       <h2 class="form-title">Create account</h2>
       <p class="form-sub">Choose your role to get started</p>
       <div class="alert" id="regAlert"></div>
@@ -174,12 +169,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f2f5f3;display:flex;
 <script type="module">
 import { supabase } from './supabase-client.js';
 
-// ================= UI =================
 function showAlert(id, msg, type) {
   const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'alert ' + type;
-  el.style.display = 'block';
+  el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
 }
 
 function switchPanel(id) {
@@ -187,85 +180,127 @@ function switchPanel(id) {
   document.getElementById(id).classList.add('active');
 }
 
-// FIXED: event listeners (no inline onclick)
-document.getElementById('goRegister').addEventListener('click', (e) => {
-  e.preventDefault();
-  switchPanel('panelReg');
-});
+function toggleSupFields() {
+  const role = document.querySelector('input[name="role"]:checked').value;
+  document.getElementById('supFields').style.display = role === 'supplier' ? 'block' : 'none';
+}
 
-document.getElementById('goLogin').addEventListener('click', (e) => {
+// ---------- LOGIN ----------
+async function doLogin(e) {
   e.preventDefault();
-  switchPanel('panelLogin');
-});
-
-// ================= LOGIN =================
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const email = document.getElementById('loginEmail').value;
+  const email = document.getElementById('loginEmail').value.trim();
   const pw = document.getElementById('loginPw').value;
+  const expectedRole = document.querySelector('input[name="loginRole"]:checked').value;
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password: pw
-  });
-
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
   if (error) {
-    showAlert('loginAlert', error.message, 'error');
+    showAlert('loginAlert', error.message || 'Invalid email or password.', 'error');
     return;
   }
 
-  showAlert('loginAlert', 'Login success!', 'success');
+  // Check the role in profiles matches what the user selected
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .maybeSingle();
 
+  const actualRole = profile?.role || data.user.user_metadata?.role || 'buyer';
+  if (actualRole !== expectedRole) {
+    await supabase.auth.signOut();
+    showAlert('loginAlert', `This account is registered as a ${actualRole}, not a ${expectedRole}.`, 'error');
+    return;
+  }
+
+  showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
   setTimeout(() => {
-    location.href = 'index.html';
-  }, 1000);
-});
+    location.href = actualRole === 'supplier' ? 'admin.html' : 'index.html';
+  }, 1200);
+}
 
-// ================= REGISTER =================
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
+// ---------- REGISTER ----------
+async function doRegister(e) {
   e.preventDefault();
-
   const name = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
+  const contact = document.getElementById('regContact').value.trim();
+  const address = document.getElementById('regAddress').value.trim();
   const pw = document.getElementById('regPw').value;
-  const role = document.getElementById('role').value;
-  const storeName = document.getElementById('storeName').value.trim();
+  const pwConfirm = document.getElementById('regPwConfirm').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
 
-  if (!name || !email || !pw) {
-    showAlert('regAlert', 'Fill all fields', 'error');
-    return;
+  if (!name || !email || !contact || !address || !pw || !pwConfirm)
+    return showAlert('regAlert', 'Please fill all fields.', 'error');
+  if (pw.length < 6)
+    return showAlert('regAlert', 'Password must be at least 6 characters.', 'error');
+  if (pw !== pwConfirm)
+    return showAlert('regAlert', 'Passwords do not match. Please try again.', 'error');
+
+  let storeName, cat, loc;
+  if (role === 'supplier') {
+    storeName = document.getElementById('storeName').value.trim();
+    cat = document.getElementById('storeCategory').value;
+    loc = document.getElementById('storeLoc').value;
+    if (!storeName) return showAlert('regAlert', 'Please enter your business name.', 'error');
   }
 
-  if (role === 'supplier' && !storeName) {
-    showAlert('regAlert', 'Enter business name', 'error');
-    return;
-  }
-
-  const { error } = await supabase.auth.signUp({
+  // 1. Sign up with Supabase Auth
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password: pw,
-    options: {
-      data: {
-        name,
-        role,
-        store_name: storeName
-      }
-    }
+    options: { data: { name, role } }
   });
-
-  if (error) {
-    showAlert('regAlert', error.message, 'error');
-    return;
+  if (signUpError) {
+    return showAlert('regAlert', signUpError.message || 'Registration failed.', 'error');
   }
 
-  showAlert('regAlert', 'Account created! Please login.', 'success');
+  const userId = signUpData.user?.id;
+  if (!userId) {
+    return showAlert('regAlert', 'Registration succeeded but no user was returned. Check email confirmation settings.', 'error');
+  }
 
+  // NOTE: If "Confirm email" is enabled in Supabase, the user has no session yet
+  // and the RLS inserts below will fail. For dev, disable email confirmation in
+  // Dashboard → Authentication → Providers → Email, OR handle it server-side.
+
+  // 2. Create the profile row
+  const { error: profileErr } = await supabase.from('profiles').insert({
+    id: userId, name, role, contact, address
+  });
+  if (profileErr) console.error('profile insert:', profileErr);
+
+  // 3. If supplier, create the supplier row
+  if (role === 'supplier') {
+    const { error: supErr } = await supabase.from('suppliers').insert({
+      user_id: userId,
+      email,
+      name: storeName,
+      owner_name: name,
+      category: cat,
+      location: loc,
+      contact,
+      address,
+      since: new Date().getFullYear().toString(),
+      delivery: 'Available',
+      rating: 0
+    });
+    if (supErr) console.error('supplier insert:', supErr);
+  }
+
+  showAlert('regAlert', `Account created for ${name}! Redirecting to login...`, 'success');
   setTimeout(() => {
     switchPanel('panelLogin');
-  }, 1200);
-});
-</script>
+    document.getElementById('loginEmail').value = email;
+    showAlert('loginAlert', 'Registration successful. Please log in.', 'success');
+  }, 2000);
+}
 
+
+// Expose to inline onclick handlers
+window.switchPanel = switchPanel;
+window.toggleSupFields = toggleSupFields;
+window.doLogin = doLogin;
+window.doRegister = doRegister;
+</script>
 </body>
 </html>
