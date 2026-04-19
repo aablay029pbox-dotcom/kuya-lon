@@ -73,6 +73,33 @@ select:focus{border-color:var(--g600)}
 .loading{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink3);font-size:14px}
 .spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--g100);border-top-color:var(--g600);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* PROFILE MODAL */
+.prof-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:820;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.prof-wrap.on{display:flex}
+.prof-box{background:#fff;border-radius:var(--r-lg);max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative}
+.prof-head{background:var(--g800);padding:24px 28px;position:relative;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.prof-head h2{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
+.prof-head p{font-size:13px;color:rgba(255,255,255,0.65)}
+.prof-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.prof-close:hover{background:rgba(255,255,255,0.2)}
+.prof-body{padding:24px 28px 28px}
+.prof-role{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:var(--g50);color:var(--g700);letter-spacing:.3px;text-transform:uppercase;margin-bottom:16px}
+.prof-field{margin-bottom:14px}
+.prof-field label{display:block;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.prof-field input,.prof-field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;outline:none;transition:.2s;resize:vertical}
+.prof-field input:focus,.prof-field textarea:focus{border-color:var(--g600);box-shadow:0 0 0 3px rgba(15,90,63,0.1)}
+.prof-field input:disabled{background:var(--bg);color:var(--ink3);cursor:not-allowed}
+.prof-field textarea{min-height:72px}
+.prof-hint{font-size:11px;color:var(--ink3);margin-top:4px}
+.prof-alert{padding:10px 13px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:14px;display:none}
+.prof-alert.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.prof-alert.error{background:#fde8e8;color:#7b2424;border:1px solid #f5c6cb}
+.prof-btns{display:flex;gap:10px;margin-top:18px}
+.prof-btns button{flex:1;padding:12px;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:.2s}
+.prof-btn-save{background:var(--g800);color:#fff}
+.prof-btn-save:hover{background:var(--g600)}
+.prof-btn-save:disabled{opacity:.6;cursor:wait}
+.prof-btn-cancel{background:var(--bg);color:var(--ink2);border:1.5px solid var(--border)!important}
 @media(max-width:768px){
   nav ul{display:none}.login-btn{display:none}.burger{display:flex}
   .search-row{grid-template-columns:1fr}
@@ -104,9 +131,7 @@ select:focus{border-color:var(--g600)}
     <div class="sb-email" id="sbEmail">user@example.com</div>
   </div>
   <div class="sb-menu">
-    <div class="sb-item">Profile</div>
-    <div class="sb-item">Settings</div>
-    <div class="sb-item" onclick="location.href='index.html#about'">About</div>
+    <div class="sb-item" onclick="openProfileModal()">Profile</div>
     <div class="sb-item" id="adminItem" style="display:none" onclick="location.href='admin.html'">Admin Dashboard</div>
   </div>
   <div class="sb-foot"><button class="logout-btn" onclick="doLogout()">Logout</button></div>
@@ -136,6 +161,44 @@ select:focus{border-color:var(--g600)}
   <div class="results-bar"><p id="resultCount"></p></div>
   <div class="grid" id="grid">
     <div class="loading"><div class="spinner"></div><div>Loading suppliers...</div></div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="prof-wrap" id="profWrap">
+  <div class="prof-box">
+    <div class="prof-head">
+      <button class="prof-close" onclick="closeProfileModal()">&times;</button>
+      <h2>Edit Profile</h2>
+      <p>Update your personal information</p>
+    </div>
+    <div class="prof-body">
+      <span class="prof-role" id="profRole">Buyer</span>
+      <div class="prof-alert" id="profAlert"></div>
+      <form onsubmit="saveProfile(event)">
+        <div class="prof-field">
+          <label>Full Name</label>
+          <input type="text" id="profName" required placeholder="Juan dela Cruz">
+        </div>
+        <div class="prof-field">
+          <label>Email</label>
+          <input type="email" id="profEmail" disabled>
+          <div class="prof-hint">Email cannot be changed here.</div>
+        </div>
+        <div class="prof-field">
+          <label>Contact Number</label>
+          <input type="tel" id="profContact" required placeholder="e.g. 09XX XXX XXXX">
+        </div>
+        <div class="prof-field">
+          <label>House Address</label>
+          <textarea id="profAddress" required placeholder="House No., Street, Barangay, Municipality"></textarea>
+        </div>
+        <div class="prof-btns">
+          <button type="button" class="prof-btn-cancel" onclick="closeProfileModal()">Cancel</button>
+          <button type="submit" class="prof-btn-save" id="profSaveBtn">Save Changes</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -253,10 +316,96 @@ select:focus{border-color:var(--g600)}
       .subscribe();
   }
 
+  // ---- Profile modal ----
+  function openProfileModal() {
+    if (!currentUser) { location.href = 'login.html'; return; }
+    // Close sidebar if open
+    document.getElementById('sidebar').classList.remove('on');
+    document.getElementById('overlay').classList.remove('on');
+    // Fill form with current values
+    document.getElementById('profName').value = currentUser.name || '';
+    document.getElementById('profEmail').value = currentUser.email || '';
+    document.getElementById('profContact').value = currentUser.contact || '';
+    document.getElementById('profAddress').value = currentUser.address || '';
+    document.getElementById('profRole').textContent = currentUser.role === 'supplier' ? 'Supplier' : 'Buyer';
+    document.getElementById('profAlert').style.display = 'none';
+    document.getElementById('profWrap').classList.add('on');
+  }
+
+  function closeProfileModal() {
+    document.getElementById('profWrap').classList.remove('on');
+  }
+
+  function showProfAlert(msg, type) {
+    const el = document.getElementById('profAlert');
+    el.textContent = msg;
+    el.className = 'prof-alert ' + type;
+    el.style.display = 'block';
+  }
+
+  async function saveProfile(e) {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const name = document.getElementById('profName').value.trim();
+    const contact = document.getElementById('profContact').value.trim();
+    const address = document.getElementById('profAddress').value.trim();
+
+    if (!name || !contact || !address) {
+      return showProfAlert('Please fill in all fields.', 'error');
+    }
+
+    const saveBtn = document.getElementById('profSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    // 1. Update the profiles row
+    const { error: profErr } = await supabase
+      .from('profiles')
+      .update({ name, contact, address })
+      .eq('id', currentUser.id);
+
+    if (profErr) {
+      console.error('profile update:', profErr);
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+      return showProfAlert(profErr.message || 'Could not update profile.', 'error');
+    }
+
+    // 2. If supplier, keep the suppliers row's owner_name / contact / address in sync
+    if (currentUser.role === 'supplier') {
+      const { error: supErr } = await supabase
+        .from('suppliers')
+        .update({ owner_name: name, contact, address })
+        .eq('user_id', currentUser.id);
+      if (supErr) console.warn('supplier sync:', supErr);
+    }
+
+    // 3. Update local state + sidebar UI immediately
+    currentUser.name = name;
+    currentUser.contact = contact;
+    currentUser.address = address;
+    document.getElementById('sbName').textContent = name;
+    document.querySelector('.sb-avatar').textContent = (name || 'U').charAt(0).toUpperCase();
+
+    showProfAlert('Profile updated successfully!', 'success');
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Changes';
+    setTimeout(closeProfileModal, 1200);
+  }
+
+  // Close modal when clicking on backdrop
+  document.getElementById('profWrap').addEventListener('click', function (e) {
+    if (e.target === this) closeProfileModal();
+  });
+
   // Expose for inline onclick handlers
   window.toggleSidebar = toggleSidebar;
   window.doLogout = doLogout;
   window.doFilter = doFilter;
+  window.openProfileModal = openProfileModal;
+  window.closeProfileModal = closeProfileModal;
+  window.saveProfile = saveProfile;
 
   init();
 </script>
