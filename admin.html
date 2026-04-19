@@ -242,6 +242,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               </select>
             </div>
           </div>
+          <div class="field"><label>Category</label>
+            <select id="mCategory">
+              <option value="cement">Cement &amp; Aggregates</option>
+              <option value="steel">Steel &amp; Rebars</option>
+              <option value="lumber">Lumber &amp; Plywood</option>
+              <option value="hardware">Hardware &amp; Tools</option>
+              <option value="paint">Paint &amp; Coating</option>
+              <option value="electrical">Electrical</option>
+              <option value="plumbing">Plumbing</option>
+            </select>
+          </div>
           <div class="field"><label>Description (optional)</label><textarea id="mDesc" placeholder="Brief description of the material..."></textarea></div>
           <div style="display:flex;gap:10px">
             <button class="btn-primary" onclick="addMaterial()">Add to Catalog</button>
@@ -326,6 +337,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <option value="sheet">Sheet</option>
         </select>
       </div>
+    </div>
+    <div class="field"><label>Category</label>
+      <select id="eCategory">
+        <option value="cement">Cement &amp; Aggregates</option>
+        <option value="steel">Steel &amp; Rebars</option>
+        <option value="lumber">Lumber &amp; Plywood</option>
+        <option value="hardware">Hardware &amp; Tools</option>
+        <option value="paint">Paint &amp; Coating</option>
+        <option value="electrical">Electrical</option>
+        <option value="plumbing">Plumbing</option>
+      </select>
     </div>
     <div class="field"><label>Description</label><textarea id="eDesc"></textarea></div>
     <div class="modal-btns">
@@ -458,6 +480,7 @@ async function addMaterial() {
     name,
     price: parseFloat(price),
     unit: document.getElementById('mUnit').value,
+    category: document.getElementById('mCategory').value,
     description: document.getElementById('mDesc').value.trim() || null
   });
   if (error) { alert('Failed to add material: ' + error.message); return; }
@@ -469,6 +492,7 @@ async function addMaterial() {
   document.getElementById('mName').value = '';
   document.getElementById('mPrice').value = '';
   document.getElementById('mDesc').value = '';
+  document.getElementById('mCategory').value = 'cement';
   refreshStats();
   showPanel('materials');
 }
@@ -480,6 +504,7 @@ function openEdit(id) {
   document.getElementById('eName').value = m.name;
   document.getElementById('ePrice').value = m.price;
   document.getElementById('eUnit').value = m.unit;
+  document.getElementById('eCategory').value = m.category || 'cement';
   document.getElementById('eDesc').value = m.description || '';
   document.getElementById('editModal').classList.add('on');
 }
@@ -492,6 +517,7 @@ async function saveEdit() {
       name: document.getElementById('eName').value,
       price: parseFloat(document.getElementById('ePrice').value),
       unit: document.getElementById('eUnit').value,
+      category: document.getElementById('eCategory').value,
       description: document.getElementById('eDesc').value || null
     })
     .eq('id', editId);
