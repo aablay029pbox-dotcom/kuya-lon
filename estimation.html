@@ -1287,19 +1287,21 @@ function renderCustomMats(){
 
 // Supplier
 const MAT_MAP={
-  pCementPortland:{keys:['portland cement','portland'],label:'Portland Cement'},
-  pCementPozzolan:{keys:['pozzolan cement','pozzolan','pozzolana'],label:'Pozzolan Cement'},
-  pSand:{keys:['sand','fine sand'],label:'Sand'},
-  pGravel:{keys:['gravel','aggregate'],label:'Gravel'},
-  pSteel10:{keys:['steel bar 10mm','rebar 10mm'],label:'Steel 10mm'},
-  pSteel12:{keys:['steel bar 12mm','rebar 12mm'],label:'Steel 12mm'},
-  pSteel16:{keys:['steel bar 16mm','rebar 16mm'],label:'Steel 16mm'},
-  pChb4:{keys:['hollow blocks 4','chb 4"','chb 4'],label:'CHB 4"'},
-  pChb6:{keys:['hollow blocks 6','chb 6"','chb 6'],label:'CHB 6"'},
-  pGi:{keys:['g.i. roofing','gi sheet','gi roofing'],label:'GI Sheet'},
-  pLumber:{keys:['coco lumber 2x3','lumber 2x3'],label:'Lumber 2×3'},
-  pNails:{keys:['nails'],label:'Nails'},
-  pWire:{keys:['tie wire','binding wire'],label:'Tie Wire'},
+  pCementPortland:{keys:['portland cement','portland','opc cement','ordinary portland','type 1 cement'],label:'Portland Cement'},
+  pCementPozzolan:{keys:['pozzolan cement','pozzolan','pozzolana','pozzolanic','blended cement','type ip'],label:'Pozzolan Cement'},
+  pSand:{keys:['sand','fine sand','washed sand','river sand','fine aggregate'],label:'Sand'},
+  pGravel:{keys:['gravel','aggregate','crushed stone','coarse aggregate','crushed gravel'],label:'Gravel'},
+  pSteel10:{keys:['steel bar 10','rebar 10','10mm bar','deformed bar 10','10mm rebar','10mm steel'],label:'Steel 10mm'},
+  pSteel12:{keys:['steel bar 12','rebar 12','12mm bar','deformed bar 12','12mm rebar','12mm steel'],label:'Steel 12mm'},
+  pSteel16:{keys:['steel bar 16','rebar 16','16mm bar','deformed bar 16','16mm rebar','16mm steel'],label:'Steel 16mm'},
+  pChb4:{keys:['hollow blocks 4','chb 4','4" chb','4 inch chb','chb4','concrete hollow block 4'],label:'CHB 4"'},
+  pChb6:{keys:['hollow blocks 6','chb 6','6" chb','6 inch chb','chb6','concrete hollow block 6'],label:'CHB 6"'},
+  pTile:{keys:['tile','floor tile','ceramic tile','tiles','floor tiles','ceramic tiles','porcelain tile'],label:'Tiles'},
+  pGi:{keys:['g.i. roofing','gi sheet','gi roofing','galvanized iron','corrugated sheet','roofing sheet','gi corrugated'],label:'GI Sheet'},
+  pLumber:{keys:['coco lumber 2x3','lumber 2x3','coco lumber','coconut lumber','lumber','2x3 lumber'],label:'Lumber 2×3'},
+  pWoodPanel:{keys:['wood panel','plywood','marine plywood','ordinary plywood','plyboard'],label:'Plywood'},
+  pNails:{keys:['nails','common wire nails','assorted nails','nail'],label:'Nails'},
+  pWire:{keys:['tie wire','binding wire','gi wire','annealed wire','tying wire'],label:'Tie Wire'},
 };
 const DEFAULT_PRICES={pCementPortland:295,pCementPozzolan:265,pSand:1200,pGravel:1500,pSteel10:350,pSteel12:475,pSteel16:850,pChb4:12,pChb6:16,pTile:45,pGi:385,pLumber:125,pNails:85,pWire:95};
 const CAT_ICONS={hardware:'',lumber:'',construction:'',cement:''};
@@ -1343,6 +1345,22 @@ function renderSupplierCards(){
     const metaBits=[s.location,s.category].filter(Boolean);
     const metaHTML=metaBits.map((b,j)=>j===0?escapeHtml(b):`<span class="sup-card-meta-dot"></span>${escapeHtml(b)}`).join('');
 
+    // Show matched material prices if this supplier is selected
+    let matListHTML='';
+    if(isSel){
+      const matchedMats=Object.entries(MAT_MAP)
+        .filter(([id])=>supplierAvailMap[id]===true)
+        .map(([id,info])=>{
+          const price=parseFloat(document.getElementById(id)?.value)||0;
+          return`<div class="sup-mat-row"><span class="mn">${info.label}</span><span class="mp">&#8369;${price.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>`;
+        });
+      if(matchedMats.length){
+        matListHTML=`<div class="sup-mat-list">${matchedMats.join('')}</div><span class="sup-mat-count">${matchedMats.length} material${matchedMats.length>1?'s':''} matched</span>`;
+      }else{
+        matListHTML=`<div style="font-size:12px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--border);margin-top:4px;font-style:italic">No matching materials in catalog yet.</div>`;
+      }
+    }
+
     return `<div class="sup-card${isSel?' selected':''}" onclick="selectSupplierByIdx(${i})">
       <div class="sup-card-head">
         <div class="sup-card-avatar">${initials}</div>
@@ -1351,6 +1369,7 @@ function renderSupplierCards(){
           <div class="sup-card-meta">${metaHTML||'&mdash;'}</div>
         </div>
       </div>
+      ${matListHTML}
     </div>`;
   }).join('');
 }
