@@ -474,8 +474,8 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
   </div>
   <div id="resultsContent" style="display:none">
     <div id="noMatNotice" style="display:none;background:#fffbea;border:1.5px solid #f6e05e;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#744210;line-height:1.6">
-      <strong>No materials found from this supplier.</strong><br>
-      The selected supplier hasn't added materials to their catalog yet, or their items don't match the required categories. Ask them to add materials in their Admin Dashboard.
+      <strong>Total cost is ₱0.</strong><br>
+      The selected supplier has no materials listed in their catalog that match the items needed for this project. Only materials actually in the supplier's catalog are included in the calculation. Ask them to add materials via their Admin Dashboard.
     </div>
 
     <div class="result-hero">
@@ -536,9 +536,7 @@ async function doLogout(){if(confirm('Logout?')){await supabase.auth.signOut();w
 
 // Cement type toggle
 function showCementFields(){
-  const t=document.getElementById('cementType').value;
-  document.getElementById('portlandRow').style.display=(t==='portland'||t==='both')?'block':'none';
-  document.getElementById('pozzolanRow').style.display=(t==='pozzolan'||t==='both')?'block':'none';
+  // Cement type is now auto-detected from supplier catalog; this function is a no-op
 }
 
 // ── Flooring area live display ──
@@ -884,49 +882,87 @@ function calculate(){
 
   const tileSize=document.getElementById('tileSize').value;
   const inclRoof=document.getElementById('roofing').value==='yes';
-  const cementType=document.getElementById('cementType').value;
-  // Use ONLY prices from the selected supplier's catalog (no defaults)
-  function getPrice(inputId){
-    return parseFloat(document.getElementById(inputId)?.value) || 0;
+
+  // Look up price from supplier's actual catalog by searching material name
+  // Returns the matching material object {name, price, unit} or null
+  function findMat(keywords){
+    if(!supplierMats.length) return null;
+    const kws = Array.isArray(keywords) ? keywords : [keywords];
+    return supplierMats.find(m => kws.some(k => m.name.toLowerCase().includes(k.toLowerCase()))) || null;
   }
-  const portlandPrice = getPrice('pCementPortland');
-  const pozzolanPrice = getPrice('pCementPozzolan');
+  function matPrice(keywords){ const m=findMat(keywords); return m ? parseFloat(m.price)||0 : 0; }
+  function matUnit(keywords){ const m=findMat(keywords); return m ? m.unit : 'unit'; }
+  function matName(keywords){ const m=findMat(keywords); return m ? m.name : null; }
+  function hasMat(keywords){ return findMat(keywords) !== null; }
+
+  // Cement: detect what the supplier carries
+  const portlandMat = findMat(['portland cement','portland','opc','ordinary portland']);
+  const pozzolanMat = findMat(['pozzolan cement','pozzolan','pozzolana','blended cement']);
+  const hasCementPortland = portlandMat !== null;
+  const hasCementPozzolan = pozzolanMat !== null;
+  const portlandPrice = portlandMat ? parseFloat(portlandMat.price)||0 : 0;
+  const pozzolanPrice = pozzolanMat ? parseFloat(pozzolanMat.price)||0 : 0;
+
+  // Auto-detect cement type strictly from supplier catalog
+  let cementType = 'portland';
+  if(hasCementPortland && hasCementPozzolan) cementType = 'both';
+  else if(hasCementPozzolan) cementType = 'pozzolan';
+  else cementType = 'portland';
+
   const P={
-    sand:     getPrice('pSand'),
-    gravel:   getPrice('pGravel'),
-    s10:      getPrice('pSteel10'),
-    s12:      getPrice('pSteel12'),
-    s16:      getPrice('pSteel16'),
-    chb4:     getPrice('pChb4'),
-    chb6:     getPrice('pChb6'),
-    tile:     getPrice('pTile'),
-    gi:       getPrice('pGi'),
-    lumber:   getPrice('pLumber'),
-    woodPanel:getPrice('pWoodPanel'),
-    nails:    getPrice('pNails'),
-    wire:     getPrice('pWire'),
+    sand:     matPrice(['sand','fine sand','washed sand','river sand']),
+    gravel:   matPrice(['gravel','aggregate','crushed stone']),
+    s10:      matPrice(['steel bar 10','rebar 10','10mm bar','deformed bar 10','10mm steel']),
+    s12:      matPrice(['steel bar 12','rebar 12','12mm bar','deformed bar 12','12mm steel']),
+    s16:      matPrice(['steel bar 16','rebar 16','16mm bar','deformed bar 16','16mm steel']),
+    chb4:     matPrice(['chb 4','hollow block 4','4" chb','4 inch chb']),
+    chb6:     matPrice(['chb 6','hollow block 6','6" chb','6 inch chb']),
+    tile:     matPrice(['tile','floor tile','ceramic tile','porcelain tile']),
+    gi:       matPrice(['g.i. roofing','gi sheet','gi roofing','galvanized iron','corrugated sheet','roofing sheet']),
+    lumber:   matPrice(['coco lumber','lumber 2x3','coconut lumber','lumber']),
+    woodPanel:matPrice(['plywood','wood panel','plyboard','marine plywood']),
+    nails:    matPrice(['nails','common wire nails','assorted nails']),
+    wire:     matPrice(['tie wire','binding wire','gi wire','annealed wire']),
+  };
+
+  // Check if supplier has this material
+  const has={
+    sand:     hasMat(['sand','fine sand','washed sand','river sand']),
+    gravel:   hasMat(['gravel','aggregate','crushed stone']),
+    s10:      hasMat(['steel bar 10','rebar 10','10mm bar','deformed bar 10','10mm steel']),
+    s12:      hasMat(['steel bar 12','rebar 12','12mm bar','deformed bar 12','12mm steel']),
+    s16:      hasMat(['steel bar 16','rebar 16','16mm bar','deformed bar 16','16mm steel']),
+    chb4:     hasMat(['chb 4','hollow block 4','4" chb','4 inch chb']),
+    chb6:     hasMat(['chb 6','hollow block 6','6" chb','6 inch chb']),
+    tile:     hasMat(['tile','floor tile','ceramic tile','porcelain tile']),
+    gi:       hasMat(['g.i. roofing','gi sheet','gi roofing','galvanized iron','corrugated sheet','roofing sheet']),
+    lumber:   hasMat(['coco lumber','lumber 2x3','coconut lumber','lumber']),
+    woodPanel:hasMat(['plywood','wood panel','plyboard','marine plywood']),
+    nails:    hasMat(['nails','common wire nails','assorted nails']),
+    wire:     hasMat(['tie wire','binding wire','gi wire','annealed wire']),
+    cementPortland: hasCementPortland,
+    cementPozzolan: hasCementPozzolan,
   };
 
   function matRows(list){
-    return list.map(m=>`<div class="mat-line"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">₱${fmt(m.cost)}</span></span></div>`).join('');
+    return list.map(m=>`<div class="mat-line"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">&#8369;${fmt(m.cost)}</span></span></div>`).join('');
   }
-  
-  // Nested/hierarchical rendering for walls section
+
   function matRowsHierarchy(list){
     return list.map(m=>{
       if(m.isHeader){
         return `<div class="mat-line" style="font-weight:600;padding:8px 0 4px 0;border-top:1px solid var(--border);margin-top:4px;padding-top:8px"><span class="mn">${m.name}</span></div>`;
       } else if(m.indent){
-        return `<div class="mat-line" style="padding-left:20px"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">₱${fmt(m.cost)}</span></span></div>`;
+        return `<div class="mat-line" style="padding-left:20px"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">&#8369;${fmt(m.cost)}</span></span></div>`;
       } else {
-        return `<div class="mat-line"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">₱${fmt(m.cost)}</span></span></div>`;
+        return `<div class="mat-line"><span class="mn">${m.name}</span><span><span class="mq">${m.qty} ${m.unit}</span><span class="mc">&#8369;${fmt(m.cost)}</span></span></div>`;
       }
     }).join('');
   }
-  
-  // Only show items that the selected supplier actually carries in their catalog
+
+  // Only include items the supplier actually has in their catalog; always pass section headers
   function filtered(list){
-    return list.filter(m => !m.field || supplierAvailMap[m.field] === true);
+    return list.filter(m => m.isHeader || m.has === true);
   }
   function catCost(list){return list.reduce((s,m)=>s+(m.cost||0),0);}
 
@@ -989,53 +1025,52 @@ function calculate(){
   });
 
   // ────────────────────────────────────────────
-  // SECTION 1: SLAB (Cement only - for ground floor + additional slabs)
+  // SECTION 1: SLAB (Cement, Steel, Nails, Wire)
   // ────────────────────────────────────────────
   const sec1Mats=[];
   if(floors.length){
-    // Ground floor cement bags (multiplier 7.5)
     const groundFloorCementBags=Math.ceil(groundFloorSlabVol*7.5);
-    // Additional slabs cement bags (multiplier 9.0)
     const additionalSlabsCementBags=additionalSlabsVol>0?Math.ceil(additionalSlabsVol*9.0):0;
     const totalCementBags=groundFloorCementBags+additionalSlabsCementBags;
-    
-    if(cementType==='portland'||cementType==='both'){
+
+    if((cementType==='portland'||cementType==='both') && has.cementPortland){
       const bags=cementType==='both'?Math.ceil(totalCementBags*0.7):totalCementBags;
-      sec1Mats.push({name:'Portland Cement (40kg)',qty:bags,unit:'bags',cost:bags*portlandPrice,field:'pCementPortland'});
+      const nm=matName(['portland cement','portland','opc','ordinary portland'])||'Portland Cement';
+      sec1Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*portlandPrice,has:true});
     }
-    if(cementType==='pozzolan'||cementType==='both'){
+    if((cementType==='pozzolan'||cementType==='both') && has.cementPozzolan){
       const bags=cementType==='both'?Math.ceil(totalCementBags*0.3):totalCementBags;
-      sec1Mats.push({name:'Pozzolan Cement (40kg)',qty:bags,unit:'bags',cost:bags*pozzolanPrice,field:'pCementPozzolan'});
+      const nm=matName(['pozzolan cement','pozzolan','pozzolana'])||'Pozzolan Cement';
+      sec1Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*pozzolanPrice,has:true});
     }
-    // Sand and Gravel for additional slabs
     if(additionalSlabsVol>0){
       const addlSand=+(additionalSlabsVol*0.5).toFixed(2);
       const addlGravel=+(additionalSlabsVol*1.0).toFixed(2);
-      sec1Mats.push({name:'Sand',qty:addlSand,unit:'m³',cost:addlSand*P.sand,field:'pSand'});
-      sec1Mats.push({name:'Gravel',qty:addlGravel,unit:'m³',cost:addlGravel*P.gravel,field:'pGravel'});
+      sec1Mats.push({name:matName(['sand','fine sand'])||'Sand',qty:addlSand,unit:'m³',cost:addlSand*P.sand,has:has.sand});
+      sec1Mats.push({name:matName(['gravel','aggregate'])||'Gravel',qty:addlGravel,unit:'m³',cost:addlGravel*P.gravel,has:has.gravel});
     }
-    if(totalS16>0)sec1Mats.push({name:'Steel Bar 16mm',qty:totalS16,unit:'pcs',cost:totalS16*P.s16,field:'pSteel16'});
-    if(totalNails>0)sec1Mats.push({name:'Assorted Nails',qty:totalNails,unit:'kg',cost:totalNails*P.nails,field:'pNails'});
-    if(totalWireKg>0)sec1Mats.push({name:'Tie Wire',qty:totalWireKg,unit:'kg',cost:totalWireKg*P.wire,field:'pWire'});
+    if(totalS16>0) sec1Mats.push({name:matName(['steel bar 16','rebar 16','16mm'])||'Steel Bar 16mm',qty:totalS16,unit:'pcs',cost:totalS16*P.s16,has:has.s16});
+    if(totalNails>0) sec1Mats.push({name:matName(['nails'])||'Assorted Nails',qty:totalNails,unit:'kg',cost:totalNails*P.nails,has:has.nails});
+    if(totalWireKg>0) sec1Mats.push({name:matName(['tie wire','binding wire'])||'Tie Wire',qty:totalWireKg,unit:'kg',cost:totalWireKg*P.wire,has:has.wire});
   }
   const fSec1=filtered(sec1Mats);
   const cost1=catCost(fSec1);
 
   // ────────────────────────────────────────────
-  // SECTION 2: GROUND FLOOR SLAB (Sand, Gravel for ground floor + finishes)
+  // SECTION 2: GROUND FLOOR SLAB (Sand, Gravel + Finishes)
   // ────────────────────────────────────────────
   const sec2Mats=[];
   if(floors.length){
     const groundFloorSand=+(groundFloorSlabVol*0.5).toFixed(2);
     const groundFloorGravel=+(groundFloorSlabVol*1.0).toFixed(2);
-    sec2Mats.push({name:'Sand',qty:groundFloorSand,unit:'m³',cost:groundFloorSand*P.sand,field:'pSand'});
-    sec2Mats.push({name:'Gravel',qty:groundFloorGravel,unit:'m³',cost:groundFloorGravel*P.gravel,field:'pGravel'});
+    sec2Mats.push({name:matName(['sand','fine sand'])||'Sand',qty:groundFloorSand,unit:'m³',cost:groundFloorSand*P.sand,has:has.sand});
+    sec2Mats.push({name:matName(['gravel','aggregate'])||'Gravel',qty:groundFloorGravel,unit:'m³',cost:groundFloorGravel*P.gravel,has:has.gravel});
     if(totalTiles>0){
-      const tileLabel=tileSize==='60x60'?'Tiles 60×60 cm':tileSize==='30x30'?'Tiles 30×30 cm':'Tiles';
-      sec2Mats.push({name:tileLabel,qty:totalTiles,unit:'pcs',cost:totalTiles*P.tile,field:'pTile'});
+      const tileLabel=matName(['tile','floor tile','ceramic tile'])||(tileSize==='60x60'?'Tiles 60×60 cm':'Tiles 30×30 cm');
+      sec2Mats.push({name:tileLabel,qty:totalTiles,unit:'pcs',cost:totalTiles*P.tile,has:has.tile});
     }
-    if(totalGiSheets>0)sec2Mats.push({name:'G.I. Roofing Sheets',qty:totalGiSheets,unit:'pcs',cost:totalGiSheets*P.gi,field:'pGi'});
-    if(totalLumber>0)sec2Mats.push({name:'Coco Lumber 2×3',qty:totalLumber,unit:'pcs',cost:totalLumber*P.lumber,field:'pLumber'});
+    if(totalGiSheets>0) sec2Mats.push({name:matName(['g.i. roofing','gi sheet','roofing sheet'])||'G.I. Roofing Sheets',qty:totalGiSheets,unit:'pcs',cost:totalGiSheets*P.gi,has:has.gi});
+    if(totalLumber>0) sec2Mats.push({name:matName(['coco lumber','lumber'])||'Coco Lumber 2×3',qty:totalLumber,unit:'pcs',cost:totalLumber*P.lumber,has:has.lumber});
   }
   const fSec2=filtered(sec2Mats);
   const cost2=catCost(fSec2);
@@ -1048,20 +1083,22 @@ function calculate(){
     const structCementBags=Math.ceil((totalColVol+totalBeamVol)*9);
     const structSand=+((totalColVol+totalBeamVol)*0.5).toFixed(2);
     const structGravel=+((totalColVol+totalBeamVol)*1.0).toFixed(2);
-    if(cementType==='portland'||cementType==='both'){
+    if((cementType==='portland'||cementType==='both') && has.cementPortland){
       const bags=cementType==='both'?Math.ceil(structCementBags*0.7):structCementBags;
-      sec3Mats.push({name:'Portland Cement (40kg)',qty:bags,unit:'bags',cost:bags*portlandPrice,field:'pCementPortland'});
+      const nm=matName(['portland cement','portland','opc'])||'Portland Cement';
+      sec3Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*portlandPrice,has:true});
     }
-    if(cementType==='pozzolan'||cementType==='both'){
+    if((cementType==='pozzolan'||cementType==='both') && has.cementPozzolan){
       const bags=cementType==='both'?Math.ceil(structCementBags*0.3):structCementBags;
-      sec3Mats.push({name:'Pozzolan Cement (40kg)',qty:bags,unit:'bags',cost:bags*pozzolanPrice,field:'pCementPozzolan'});
+      const nm=matName(['pozzolan cement','pozzolan'])||'Pozzolan Cement';
+      sec3Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*pozzolanPrice,has:true});
     }
-    sec3Mats.push({name:'Sand',qty:structSand,unit:'m³',cost:structSand*P.sand,field:'pSand'});
-    sec3Mats.push({name:'Gravel',qty:structGravel,unit:'m³',cost:structGravel*P.gravel,field:'pGravel'});
+    sec3Mats.push({name:matName(['sand','fine sand'])||'Sand',qty:structSand,unit:'m³',cost:structSand*P.sand,has:has.sand});
+    sec3Mats.push({name:matName(['gravel','aggregate'])||'Gravel',qty:structGravel,unit:'m³',cost:structGravel*P.gravel,has:has.gravel});
     const s10=Math.ceil(totalColCount*12);
     const s12=Math.ceil(beamEntries.reduce((s,b)=>s+b.qty*b.length,0)/0.3);
-    if(s10>0)sec3Mats.push({name:`Steel Bar 10mm — Columns (${totalColCount} pcs)`,qty:s10,unit:'pcs',cost:s10*P.s10,field:'pSteel10'});
-    if(s12>0)sec3Mats.push({name:`Steel Bar 12mm — Beams (${totalBeamCount} pcs)`,qty:s12,unit:'pcs',cost:s12*P.s12,field:'pSteel12'});
+    if(s10>0) sec3Mats.push({name:matName(['steel bar 10','rebar 10','10mm'])||`Steel Bar 10mm — Columns (${totalColCount})`,qty:s10,unit:'pcs',cost:s10*P.s10,has:has.s10});
+    if(s12>0) sec3Mats.push({name:matName(['steel bar 12','rebar 12','12mm'])||`Steel Bar 12mm — Beams (${totalBeamCount})`,qty:s12,unit:'pcs',cost:s12*P.s12,has:has.s12});
   }
   const fSec3=filtered(sec3Mats);
   const cost3=catCost(fSec3);
@@ -1076,14 +1113,21 @@ function calculate(){
   
   wallSummary.forEach((w,wi)=>{
     if(w.type==='chb'&&w.chbCount>0){
-      const pricePerPc=w.chbSize==='6'?P.chb6:P.chb4;
-      chbItems.push({name:`(${w.wallArea.toFixed(1)} m²)`,qty:w.chbCount,unit:'pcs',cost:w.chbCount*pricePerPc});
+      const isChb6=w.chbSize==='6';
+      const pricePerPc=isChb6?P.chb6:P.chb4;
+      const hasChb=isChb6?has.chb6:has.chb4;
+      const nm=matName(isChb6?['chb 6','hollow block 6','6" chb']:['chb 4','hollow block 4','4" chb'])||(isChb6?'CHB 6"':'CHB 4"');
+      chbItems.push({name:`${nm} (${w.wallArea.toFixed(1)} m²)`,qty:w.chbCount,unit:'pcs',cost:w.chbCount*pricePerPc,has:hasChb});
     } else if(w.type==='mortar'&&w.wallArea>0){
-      mortarItems.push({name:`Cement (${w.wallArea.toFixed(1)} m²)`,qty:w.mortarCementBags,unit:'bags',cost:w.mortarCementBags*portlandPrice,field:'pCementPortland',indent:true});
-      mortarItems.push({name:`Sand (${w.wallArea.toFixed(1)} m²)`,qty:w.mortarSandM3,unit:'m³',cost:w.mortarSandM3*P.sand,field:'pSand',indent:true});
+      const cNm=matName(['portland cement','portland','opc'])||'Cement';
+      const sNm=matName(['sand','fine sand'])||'Sand';
+      mortarItems.push({name:`${cNm} (${w.wallArea.toFixed(1)} m²)`,qty:w.mortarCementBags,unit:'bags',cost:w.mortarCementBags*portlandPrice,has:has.cementPortland,indent:true});
+      mortarItems.push({name:`${sNm} (${w.wallArea.toFixed(1)} m²)`,qty:w.mortarSandM3,unit:'m³',cost:w.mortarSandM3*P.sand,has:has.sand,indent:true});
     } else if(w.type==='plaster'&&w.wallArea>0){
-      plasterItems.push({name:`Cement (${w.wallArea.toFixed(1)} m²)`,qty:w.plasterCementBags,unit:'bags',cost:w.plasterCementBags*portlandPrice,field:'pCementPortland',indent:true});
-      plasterItems.push({name:`Sand (${w.wallArea.toFixed(1)} m²)`,qty:w.plasterSandM3,unit:'m³',cost:w.plasterSandM3*P.sand,field:'pSand',indent:true});
+      const cNm=matName(['portland cement','portland','opc'])||'Cement';
+      const sNm=matName(['sand','fine sand'])||'Sand';
+      plasterItems.push({name:`${cNm} (${w.wallArea.toFixed(1)} m²)`,qty:w.plasterCementBags,unit:'bags',cost:w.plasterCementBags*portlandPrice,has:has.cementPortland,indent:true});
+      plasterItems.push({name:`${sNm} (${w.wallArea.toFixed(1)} m²)`,qty:w.plasterSandM3,unit:'m³',cost:w.plasterSandM3*P.sand,has:has.sand,indent:true});
     }
   });
   
@@ -1285,27 +1329,10 @@ function renderCustomMats(){
     </div>`).join('');
 }
 
-// Supplier
-const MAT_MAP={
-  pCementPortland:{keys:['portland cement','portland','opc cement','ordinary portland','type 1 cement'],label:'Portland Cement'},
-  pCementPozzolan:{keys:['pozzolan cement','pozzolan','pozzolana','pozzolanic','blended cement','type ip'],label:'Pozzolan Cement'},
-  pSand:{keys:['sand','fine sand','washed sand','river sand','fine aggregate'],label:'Sand'},
-  pGravel:{keys:['gravel','aggregate','crushed stone','coarse aggregate','crushed gravel'],label:'Gravel'},
-  pSteel10:{keys:['steel bar 10','rebar 10','10mm bar','deformed bar 10','10mm rebar','10mm steel'],label:'Steel 10mm'},
-  pSteel12:{keys:['steel bar 12','rebar 12','12mm bar','deformed bar 12','12mm rebar','12mm steel'],label:'Steel 12mm'},
-  pSteel16:{keys:['steel bar 16','rebar 16','16mm bar','deformed bar 16','16mm rebar','16mm steel'],label:'Steel 16mm'},
-  pChb4:{keys:['hollow blocks 4','chb 4','4" chb','4 inch chb','chb4','concrete hollow block 4'],label:'CHB 4"'},
-  pChb6:{keys:['hollow blocks 6','chb 6','6" chb','6 inch chb','chb6','concrete hollow block 6'],label:'CHB 6"'},
-  pTile:{keys:['tile','floor tile','ceramic tile','tiles','floor tiles','ceramic tiles','porcelain tile'],label:'Tiles'},
-  pGi:{keys:['g.i. roofing','gi sheet','gi roofing','galvanized iron','corrugated sheet','roofing sheet','gi corrugated'],label:'GI Sheet'},
-  pLumber:{keys:['coco lumber 2x3','lumber 2x3','coco lumber','coconut lumber','lumber','2x3 lumber'],label:'Lumber 2×3'},
-  pWoodPanel:{keys:['wood panel','plywood','marine plywood','ordinary plywood','plyboard'],label:'Plywood'},
-  pNails:{keys:['nails','common wire nails','assorted nails','nail'],label:'Nails'},
-  pWire:{keys:['tie wire','binding wire','gi wire','annealed wire','tying wire'],label:'Tie Wire'},
-};
-const DEFAULT_PRICES={pCementPortland:295,pCementPozzolan:265,pSand:1200,pGravel:1500,pSteel10:350,pSteel12:475,pSteel16:850,pChb4:12,pChb6:16,pTile:45,pGi:385,pLumber:125,pNails:85,pWire:95};
-const CAT_ICONS={hardware:'',lumber:'',construction:'',cement:''};
-let selectedSupplier=null,supplierAvailMap={},_allSuppliers=[];
+
+
+// Supplier state — raw catalog from DB, no mapping
+let selectedSupplier=null, supplierMats=[], _allSuppliers=[];
 
 async function loadAllSuppliers(){
   const { data, error } = await supabase.from('suppliers').select('*').order('created_at',{ascending:false});
@@ -1329,35 +1356,34 @@ function renderSupplierCards(){
   }
   document.getElementById('hwSearch').style.display='';
 
-  const filtered=_allSuppliers.map((s,i)=>({s,i})).filter(({s})=>{
+  const list=_allSuppliers.map((s,i)=>({s,i})).filter(({s})=>{
     if(!search)return true;
     return s.name.toLowerCase().includes(search)||(s.location||'').toLowerCase().includes(search);
   });
 
-  if(!filtered.length){
+  if(!list.length){
     wrap.innerHTML=`<div class="sup-empty"><div class="sup-empty-ico">?</div><h3>No matching suppliers</h3><p>Try a different search term.</p></div>`;
     return;
   }
 
-  wrap.innerHTML=filtered.map(({s,i})=>{
+  wrap.innerHTML=list.map(({s,i})=>{
     const initials=(s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
-    const isSel=selectedSupplier&&selectedSupplier.email===s.email;
+    const isSel=selectedSupplier&&selectedSupplier.id===s.id;
     const metaBits=[s.location,s.category].filter(Boolean);
     const metaHTML=metaBits.map((b,j)=>j===0?escapeHtml(b):`<span class="sup-card-meta-dot"></span>${escapeHtml(b)}`).join('');
 
-    // Show matched material prices if this supplier is selected
+    // Show the supplier's actual materials when selected
     let matListHTML='';
     if(isSel){
-      const matchedMats=Object.entries(MAT_MAP)
-        .filter(([id])=>supplierAvailMap[id]===true)
-        .map(([id,info])=>{
-          const price=parseFloat(document.getElementById(id)?.value)||0;
-          return`<div class="sup-mat-row"><span class="mn">${info.label}</span><span class="mp">&#8369;${price.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>`;
-        });
-      if(matchedMats.length){
-        matListHTML=`<div class="sup-mat-list">${matchedMats.join('')}</div><span class="sup-mat-count">${matchedMats.length} material${matchedMats.length>1?'s':''} matched</span>`;
-      }else{
-        matListHTML=`<div style="font-size:12px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--border);margin-top:4px;font-style:italic">No matching materials in catalog yet.</div>`;
+      if(supplierMats.length){
+        matListHTML=`<div class="sup-mat-list">${supplierMats.map(m=>`
+          <div class="sup-mat-row">
+            <span class="mn">${escapeHtml(m.name)} <span style="color:var(--ink3);font-weight:400">(per ${escapeHtml(m.unit)})</span></span>
+            <span class="mp">&#8369;${parseFloat(m.price).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+          </div>`).join('')}</div>
+          <span class="sup-mat-count">${supplierMats.length} material${supplierMats.length>1?'s':''} in catalog</span>`;
+      } else {
+        matListHTML=`<div style="font-size:12px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--border);margin-top:6px;font-style:italic">This supplier has no materials in their catalog yet.</div>`;
       }
     }
 
@@ -1375,40 +1401,30 @@ function renderSupplierCards(){
 }
 
 async function selectSupplierByIdx(i){
-  const s=_allSuppliers[i];if(!s)return;
-
-  // Reset price inputs
-  Object.keys(DEFAULT_PRICES).forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
-  supplierAvailMap={};
+  const s=_allSuppliers[i]; if(!s)return;
   selectedSupplier=s;
+  supplierMats=[];
 
-  // Fetch this supplier's materials from the DB
-  const { data: mats } = await supabase
-    .from('materials').select('name, price')
-    .eq('supplier_id', s.id);
+  // Fetch ALL of this supplier's materials from the DB as-is
+  const { data: mats, error } = await supabase
+    .from('materials')
+    .select('id, name, price, unit, category, description')
+    .eq('supplier_id', s.id)
+    .order('name', {ascending: true});
 
-  if(mats && mats.length){
-    Object.entries(MAT_MAP).forEach(([id,info])=>{
-      const match=mats.find(m=>info.keys.some(k=>m.name.toLowerCase().includes(k)));
-      if(match&&parseFloat(match.price)>0){
-        const el=document.getElementById(id);if(el)el.value=parseFloat(match.price);
-        supplierAvailMap[id]=true;
-      }else{supplierAvailMap[id]=false;}
-    });
-  }else{
-    Object.keys(MAT_MAP).forEach(id=>{supplierAvailMap[id]=false;});
-  }
-
-  // Auto-pick cement type based on what supplier carries
-  const hasPort=supplierAvailMap['pCementPortland'];
-  const hasPoz=supplierAvailMap['pCementPozzolan'];
-  const ctEl=document.getElementById('cementType');
-  if(hasPort&&hasPoz)ctEl.value='both';
-  else if(hasPoz)ctEl.value='pozzolan';
-  else ctEl.value='portland';
+  if(error){ console.error('materials fetch:', error); }
+  supplierMats = (mats || []).filter(m => parseFloat(m.price) > 0);
 
   const note=document.getElementById('hwNote');
-  if(note)note.innerHTML=`Using prices from <strong>${escapeHtml(s.name)}</strong>. Tap another card to change.`;
+  if(note){
+    if(supplierMats.length){
+      note.innerHTML=`Using prices from <strong>${escapeHtml(s.name)}</strong> — ${supplierMats.length} material${supplierMats.length>1?'s':''} available. Tap another card to change.`;
+      note.className='info-green';
+    } else {
+      note.innerHTML=`<strong>${escapeHtml(s.name)}</strong> has no materials listed in their catalog yet.`;
+      note.className='info-note';
+    }
+  }
 
   renderSupplierCards();
 }
