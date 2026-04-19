@@ -220,17 +220,33 @@ async function init() {
   document.getElementById('supCategory').textContent =
     (supplier.category || '').charAt(0).toUpperCase() + (supplier.category || '').slice(1);
   document.getElementById('supSince').textContent = supplier.since ? 'Since ' + supplier.since : '';
-  document.getElementById('contactEmail').textContent = supplier.email;
-  document.getElementById('contactPhone').textContent = supplier.contact || 'N/A';
-  document.getElementById('contactAddress').textContent = supplier.address || 'Partido Area';
+  // Contact card — show owner name in header if available
+  const ownerName = supplier.owner_name || supplier.name;
+  document.querySelector('.contact-card-head h3').textContent = ownerName;
+  document.getElementById('contactEmail').textContent = supplier.email || '–';
+  document.getElementById('contactPhone').textContent = supplier.contact && supplier.contact !== 'N/A' ? supplier.contact : '–';
+  document.getElementById('contactAddress').textContent = supplier.address && supplier.address !== 'Partido Area' ? supplier.address : (supplier.location ? supplier.location + ', Camarines Sur' : '–');
   document.getElementById('contactDelivery').textContent = supplier.delivery || 'Available';
 
-  // Load materials
+  // Load materials — with a timeout guard so spinner doesn't hang forever
+  const matTimeout = setTimeout(() => {
+    const loader = document.getElementById('loadingState');
+    if (loader) {
+      loader.innerHTML = `<div style="color:var(--red);font-size:13px;line-height:1.7;max-width:420px;margin:0 auto;text-align:left;background:#fde8e8;border:1.5px solid #f5c6cb;border-radius:12px;padding:16px 18px">
+        <strong>Materials are taking too long to load.</strong><br>
+        This is usually a Supabase RLS policy issue. In your Supabase Dashboard → Table Editor → <code>materials</code> table → Policies, make sure there is a <strong>SELECT policy for anon/public</strong>:<br>
+        <code style="display:block;margin-top:8px;background:rgba(0,0,0,0.06);padding:8px 10px;border-radius:6px;font-size:12px">CREATE POLICY "Public can view materials" ON materials FOR SELECT USING (true);</code>
+      </div>`;
+    }
+  }, 7000);
+
   const { data: mats, error } = await supabase
     .from('materials')
     .select('*')
     .eq('supplier_id', supplier.id)
     .order('created_at', { ascending: false });
+
+  clearTimeout(matTimeout);
 
   if (error) {
     console.error('materials load error:', error);
