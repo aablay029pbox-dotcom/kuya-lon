@@ -231,7 +231,20 @@ async function init() {
     .select('*')
     .eq('supplier_id', supplier.id)
     .order('created_at', { ascending: false });
-  if (error) console.error('materials load:', error);
+
+  if (error) {
+    console.error('materials load error:', error);
+    const g = document.getElementById('matsGrid');
+    const loader = document.getElementById('loadingState');
+    if (loader) loader.remove();
+    g.innerHTML = `<div style="grid-column:1/-1;background:#fde8e8;border:1.5px solid #f5c6cb;border-radius:12px;padding:20px;color:#7b2424;font-size:13px;line-height:1.7">
+      <strong>Could not load materials.</strong><br>
+      Error: ${error.message || JSON.stringify(error)}<br><br>
+      <strong>Most likely fix:</strong> In your Supabase Dashboard → Table Editor → <code>materials</code> table → Policies, add a <strong>SELECT policy for anon/public</strong> so visitors can read materials without being logged in.<br>
+      <code style="display:block;margin-top:8px;background:rgba(0,0,0,0.06);padding:8px 10px;border-radius:6px;font-size:12px">CREATE POLICY "Public can view materials" ON materials FOR SELECT USING (true);</code>
+    </div>`;
+    return;
+  }
 
   // Normalize so existing render code works (desc instead of description)
   allMats = (mats || []).map(m => ({
