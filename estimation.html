@@ -1288,11 +1288,14 @@ const DEFAULT_PRICES={pCementPortland:295,pCementPozzolan:265,pSand:1200,pGravel
 const CAT_ICONS={hardware:'',lumber:'',construction:'',cement:''};
 let selectedSupplier=null,supplierAvailMap={},_allSuppliers=[];
 
-async function renderSupplierCards(){
+async function loadAllSuppliers(){
   const { data, error } = await supabase.from('suppliers').select('*').order('created_at',{ascending:false});
   if (error) { console.error('suppliers load:', error); }
   _allSuppliers = data || [];
+  renderSupplierCards();
+}
 
+function renderSupplierCards(){
   const wrap=document.getElementById('supplierCards');
   const search=(document.getElementById('hwSearch')?.value||'').toLowerCase().trim();
 
@@ -1381,7 +1384,7 @@ document.getElementById('nextBtn').onclick=()=>nextStep();
 
 // (Sample-supplier seeding removed — suppliers now register via signup.)
 
-renderSupplierCards();
+loadAllSuppliers();
 renderColumns();
 renderBeams();
 renderWalls();
@@ -1506,16 +1509,52 @@ async function deleteEst(id){
   renderSavedList();
 }
 
-// Expose for any remaining inline handlers / cross-module reference
+// Expose ALL functions used by inline onclick= handlers and cross-module references
 window.toggleSidebar = toggleSidebar;
 window.doLogout = doLogout;
 window.saveEst = saveEst;
 window.printEst = printEst;
 window.renderSupplierCards = renderSupplierCards;
+window.loadAllSuppliers = loadAllSuppliers;
 window.selectSupplierByIdx = selectSupplierByIdx;
 window.renderSavedList = renderSavedList;
 window.toggleEstBody = toggleEstBody;
 window.deleteEst = deleteEst;
+// Navigation
+window.goStep = goStep;
+window.nextStep = nextStep;
+window.prevStep = prevStep;
+window.calculate = calculate;
+window.selTog = selTog;
+// Floors
+window.addFloor = addFloor;
+window.deleteFloor = deleteFloor;
+window.updateFloorField = updateFloorField;
+// Slabs
+window.addSlab = addSlab;
+window.removeSlab = removeSlab;
+window.updateSlab = updateSlab;
+// Columns
+window.addColumn = addColumn;
+window.removeColumn = removeColumn;
+window.updateColumn = updateColumn;
+// Beams
+window.addBeam = addBeam;
+window.removeBeam = removeBeam;
+window.updateBeam = updateBeam;
+// Walls
+window.addWall = addWall;
+window.removeWall = removeWall;
+window.updateWallField = updateWallField;
+// Custom materials
+window.addCustomMat = addCustomMat;
+window.removeCustomMat = removeCustomMat;
+window.updateCustomMat = updateCustomMat;
+// Misc
+window.showCementFields = showCementFields;
+window.updateFlooringArea = updateFlooringArea;
+window.updateSlabSection = updateSlabSection;
+window.updateRecs = updateRecs;
 
 initSavedView();
 </script>
