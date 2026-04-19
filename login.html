@@ -94,44 +94,82 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f2f5f3;display:flex;
 
     <!-- LOGIN -->
     <div class="form-panel active" id="panelLogin">
-      <h2>Login</h2>
-      <div id="loginAlert" class="alert"></div>
-
-      <form id="loginForm">
-        <input id="loginEmail" placeholder="Email"><br><br>
-        <input id="loginPw" type="password" placeholder="Password"><br><br>
-        <button type="submit">Login</button>
+      <h2 class="form-title">Welcome back</h2>
+      <p class="form-sub">Sign in to continue to COSTruct</p>
+      <div class="alert" id="loginAlert"></div>
+      <form onsubmit="doLogin(event)">
+        <div class="role-row">
+          <div class="role-opt">
+            <input type="radio" id="lrBuyer" name="loginRole" value="buyer" checked>
+            <label for="lrBuyer">Buyer</label>
+          </div>
+          <div class="role-opt">
+            <input type="radio" id="lrSupplier" name="loginRole" value="supplier">
+            <label for="lrSupplier">Supplier</label>
+          </div>
+        </div>
+        <div class="field"><label>Email Address</label><input type="email" id="loginEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPw" required placeholder="••••••••"></div>
+<button type="submit" class="submit-btn">Sign In</button>
+        <p class="switch-txt">No account yet? <a href="#" onclick="switchPanel('panelReg')">Register here</a></p>
       </form>
-
-      <p>No account? <a href="#" id="goRegister">Register here</a></p>
     </div>
 
     <!-- REGISTER -->
-    <div class="form-panel" id="panelReg">
-      <h2>Register</h2>
-      <div id="regAlert" class="alert"></div>
-
-      <form id="registerForm">
-        <input id="regName" placeholder="Name"><br><br>
-        <input id="regEmail" placeholder="Email"><br><br>
-        <input id="regPw" type="password" placeholder="Password"><br><br>
-
-        <select id="role">
-          <option value="buyer">Buyer</option>
-          <option value="supplier">Supplier</option>
-        </select><br><br>
-
-        <input id="storeName" placeholder="Business Name (supplier only)"><br><br>
-
-        <button type="submit">Create Account</button>
+      <div class="form-panel" id="panelReg">
+      <h2 class="form-title">Create account</h2>
+      <p class="form-sub">Choose your role to get started</p>
+      <div class="alert" id="regAlert"></div>
+      <form onsubmit="doRegister(event)">
+        <div class="role-row">
+          <div class="role-opt">
+            <input type="radio" id="rrBuyer" name="role" value="buyer" checked onchange="toggleSupFields()">
+            <label for="rrBuyer">Buyer</label>
+          </div>
+          <div class="role-opt">
+            <input type="radio" id="rrSupplier" name="role" value="supplier" onchange="toggleSupFields()">
+            <label for="rrSupplier">Supplier</label>
+          </div>
+        </div>
+        <div class="field"><label>Full Name</label><input type="text" id="regName" required placeholder="Juan dela Cruz"></div>
+        <div class="field"><label>Email Address</label><input type="email" id="regEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Contact Number</label><input type="tel" id="regContact" required placeholder="e.g. 09XX XXX XXXX"></div>
+        <div class="field"><label>House Address</label><input type="text" id="regAddress" required placeholder="House No., Street, Barangay, Municipality"></div>
+        <div class="field-row">
+          <div class="field"><label>Password</label><input type="password" id="regPw" required placeholder="min 6 characters"></div>
+          <div class="field"><label>Confirm Password</label><input type="password" id="regPwConfirm" required placeholder="re-enter password"></div>
+        </div>
+        <div id="supFields" style="display:none">
+          <div class="supplier-fields">
+            <div class="supplier-fields-label">Store / Business Info</div>
+            <div class="field"><label>Business Name</label><input type="text" id="storeName" placeholder="e.g. Juan's Hardware"></div>
+            <div class="field-row">
+              <div class="field"><label>Category</label>
+                <select id="storeCategory">
+                  <option value="construction">General Construction</option>
+                  <option value="hardware">Hardware</option>
+                  <option value="lumber">Lumber & Wood</option>
+                  <option value="cement">Cement & Aggregates</option>
+                </select>
+              </div>
+              <div class="field"><label>Location</label>
+                <select id="storeLoc">
+                  <option value="Tigaon">Tigaon</option>
+                  <option value="Goa">Goa</option>
+                  <option value="San Jose">San Jose</option>
+                  <option value="Lagonoy">Lagonoy</option>
+                  <option value="Sagnay">Sagnay</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn">Create Account</button>
+        <p class="switch-txt">Already have an account? <a href="#" onclick="switchPanel('panelLogin')">Sign in</a></p>
       </form>
-
-      <p>Already have account? <a href="#" id="goLogin">Login</a></p>
     </div>
-
   </div>
 </div>
-
 <script type="module">
 import { supabase } from './supabase-client.js';
 
