@@ -1029,21 +1029,19 @@ function calculate(){
   // ────────────────────────────────────────────
   const sec1Mats=[];
   if(floors.length){
-    const groundFloorCementBags=Math.ceil(groundFloorSlabVol*7.5);
-    const additionalSlabsCementBags=additionalSlabsVol>0?Math.ceil(additionalSlabsVol*9.0):0;
-    const totalCementBags=groundFloorCementBags+additionalSlabsCementBags;
-
-    if((cementType==='portland'||cementType==='both') && has.cementPortland){
-      const bags=cementType==='both'?Math.ceil(totalCementBags*0.7):totalCementBags;
-      const nm=matName(['portland cement','portland','opc','ordinary portland'])||'Portland Cement';
-      sec1Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*portlandPrice,has:true});
-    }
-    if((cementType==='pozzolan'||cementType==='both') && has.cementPozzolan){
-      const bags=cementType==='both'?Math.ceil(totalCementBags*0.3):totalCementBags;
-      const nm=matName(['pozzolan cement','pozzolan','pozzolana'])||'Pozzolan Cement';
-      sec1Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*pozzolanPrice,has:true});
-    }
+    // Additional slabs (user-added slabs beyond the ground floor)
     if(additionalSlabsVol>0){
+      const additionalSlabsCementBags=Math.ceil(additionalSlabsVol*9.0);
+      if((cementType==='portland'||cementType==='both') && has.cementPortland){
+        const bags=cementType==='both'?Math.ceil(additionalSlabsCementBags*0.7):additionalSlabsCementBags;
+        const nm=matName(['portland cement','portland','opc','ordinary portland'])||'Portland Cement';
+        sec1Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*portlandPrice,has:true});
+      }
+      if((cementType==='pozzolan'||cementType==='both') && has.cementPozzolan){
+        const bags=cementType==='both'?Math.ceil(additionalSlabsCementBags*0.3):additionalSlabsCementBags;
+        const nm=matName(['pozzolan cement','pozzolan','pozzolana'])||'Pozzolan Cement';
+        sec1Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*pozzolanPrice,has:true});
+      }
       const addlSand=+(additionalSlabsVol*0.5).toFixed(2);
       const addlGravel=+(additionalSlabsVol*1.0).toFixed(2);
       sec1Mats.push({name:matName(['sand','fine sand'])||'Sand',qty:addlSand,unit:'m³',cost:addlSand*P.sand,has:has.sand});
@@ -1057,10 +1055,21 @@ function calculate(){
   const cost1=catCost(fSec1);
 
   // ────────────────────────────────────────────
-  // SECTION 2: GROUND FLOOR SLAB (Sand, Gravel + Finishes)
+  // SECTION 2: GROUND FLOOR SLAB (Cement, Sand, Gravel + Finishes)
   // ────────────────────────────────────────────
   const sec2Mats=[];
   if(floors.length){
+    const groundFloorCementBags2=Math.ceil(groundFloorSlabVol*7.5);
+    if((cementType==='portland'||cementType==='both') && has.cementPortland){
+      const bags=cementType==='both'?Math.ceil(groundFloorCementBags2*0.7):groundFloorCementBags2;
+      const nm=matName(['portland cement','portland','opc','ordinary portland'])||'Portland Cement';
+      sec2Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*portlandPrice,has:true});
+    }
+    if((cementType==='pozzolan'||cementType==='both') && has.cementPozzolan){
+      const bags=cementType==='both'?Math.ceil(groundFloorCementBags2*0.3):groundFloorCementBags2;
+      const nm=matName(['pozzolan cement','pozzolan','pozzolana'])||'Pozzolan Cement';
+      sec2Mats.push({name:nm,qty:bags,unit:'bags',cost:bags*pozzolanPrice,has:true});
+    }
     const groundFloorSand=+(groundFloorSlabVol*0.5).toFixed(2);
     const groundFloorGravel=+(groundFloorSlabVol*1.0).toFixed(2);
     sec2Mats.push({name:matName(['sand','fine sand'])||'Sand',qty:groundFloorSand,unit:'m³',cost:groundFloorSand*P.sand,has:has.sand});
@@ -1517,25 +1526,31 @@ async function renderSavedList(){
     return `<div class="est-card" data-card="${escapeHtml(safeId)}">
       <div class="est-card-head" data-toggle="${escapeHtml(safeId)}">
         <div class="est-icon">${escapeHtml(initials)}</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="est-name">${escapeHtml(e.name)}</div>
           <div class="est-meta">${metaParts.map((p,i)=>i===0?escapeHtml(String(p)):`<span class="est-meta-dot"></span>${escapeHtml(String(p))}`).join('')}</div>
         </div>
-        <div class="est-right">
+        <div class="est-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <div class="est-total">${escapeHtml(e.total)}</div>
-          <div class="est-chevron">▼</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="est-del-btn" data-del="${escapeHtml(safeId)}" style="margin:0;padding:4px 10px;font-size:12px">🗑 Delete</button>
+            <div class="est-chevron">▼</div>
+          </div>
         </div>
       </div>
       <div class="est-body" data-body="${escapeHtml(safeId)}">
         ${e.breakdown}
-        <button class="est-del-btn" data-del="${escapeHtml(safeId)}">Delete this estimate</button>
       </div>
     </div>`;
   }).join('');
 
   // Wire handlers
   list.querySelectorAll('[data-toggle]').forEach(el => {
-    el.addEventListener('click', () => toggleEstBody(el.getAttribute('data-toggle')));
+    el.addEventListener('click', (ev) => {
+      // Don't toggle if clicking the delete button
+      if(ev.target.closest('[data-del]')) return;
+      toggleEstBody(el.getAttribute('data-toggle'));
+    });
   });
   list.querySelectorAll('[data-del]').forEach(el => {
     el.addEventListener('click', (ev) => { ev.stopPropagation(); deleteEst(el.getAttribute('data-del')); });
