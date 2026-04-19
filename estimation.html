@@ -850,7 +850,11 @@ function goStep(n){
   document.querySelectorAll('.step-tab').forEach((t,i)=>{t.classList.toggle('active',i===n);t.classList.toggle('done',i<n);});
   document.getElementById('prevBtn').style.display=n>0?'block':'none';
   const nb=document.getElementById('nextBtn');
-  if(n===totalSteps-1){nb.textContent=' Calculate';nb.className='btn btn-accent';nb.onclick=()=>calculate();}
+  if(n===totalSteps-1){
+    nb.textContent=' Calculate';nb.className='btn btn-accent';nb.onclick=()=>calculate();
+    // Auto-calculate when arriving at Results
+    calculate();
+  }
   else{nb.textContent='Next →';nb.className='btn btn-primary';nb.onclick=()=>nextStep();}
   window.scrollTo(0,0);
 }
@@ -876,23 +880,28 @@ function calculate(){
   const tileSize=document.getElementById('tileSize').value;
   const inclRoof=document.getElementById('roofing').value==='yes';
   const cementType=document.getElementById('cementType').value;
-  const portlandPrice=parseFloat(document.getElementById('pCementPortland').value)||295;
-  const pozzolanPrice=parseFloat(document.getElementById('pCementPozzolan').value)||265;
-
+  // Use supplier price if matched, otherwise fall back to DEFAULT_PRICES
+  function getPrice(inputId, defaultKey){
+    const v = parseFloat(document.getElementById(inputId)?.value);
+    if(v && v > 0) return v;
+    return DEFAULT_PRICES[defaultKey] || DEFAULT_PRICES[inputId] || 0;
+  }
+  const portlandPrice = getPrice('pCementPortland','pCementPortland');
+  const pozzolanPrice = getPrice('pCementPozzolan','pCementPozzolan');
   const P={
-    sand:parseFloat(document.getElementById('pSand').value)||1200,
-    gravel:parseFloat(document.getElementById('pGravel').value)||1500,
-    s10:parseFloat(document.getElementById('pSteel10').value)||350,
-    s12:parseFloat(document.getElementById('pSteel12').value)||475,
-    s16:parseFloat(document.getElementById('pSteel16').value)||850,
-    chb4:parseFloat(document.getElementById('pChb4').value)||12,
-    chb6:parseFloat(document.getElementById('pChb6').value)||16,
-    tile:parseFloat(document.getElementById('pTile').value)||45,
-    gi:parseFloat(document.getElementById('pGi').value)||385,
-    lumber:parseFloat(document.getElementById('pLumber').value)||125,
-    woodPanel:parseFloat(document.getElementById('pWoodPanel').value)||850,
-    nails:parseFloat(document.getElementById('pNails').value)||85,
-    wire:parseFloat(document.getElementById('pWire').value)||95,
+    sand:     getPrice('pSand','pSand'),
+    gravel:   getPrice('pGravel','pGravel'),
+    s10:      getPrice('pSteel10','pSteel10'),
+    s12:      getPrice('pSteel12','pSteel12'),
+    s16:      getPrice('pSteel16','pSteel16'),
+    chb4:     getPrice('pChb4','pChb4'),
+    chb6:     getPrice('pChb6','pChb6'),
+    tile:     getPrice('pTile','pTile'),
+    gi:       getPrice('pGi','pGi'),
+    lumber:   getPrice('pLumber','pLumber'),
+    woodPanel:getPrice('pWoodPanel','pWoodPanel'),
+    nails:    getPrice('pNails','pNails'),
+    wire:     getPrice('pWire','pWire'),
   };
 
   function matRows(list){
@@ -912,8 +921,12 @@ function calculate(){
     }).join('');
   }
   
-  // All sections only show items available from the selected supplier
-  function filtered(list){return list.filter(m=>!m.field||supplierAvailMap[m.field]===true);}
+  // Show items that match supplier's catalog; if NO matches at all, show everything with default prices
+  const hasAnyMatch = Object.values(supplierAvailMap).some(v=>v===true);
+  function filtered(list){
+    if(!hasAnyMatch) return list; // fallback: show all with default prices
+    return list.filter(m=>!m.field||supplierAvailMap[m.field]===true);
+  }
   function catCost(list){return list.reduce((s,m)=>s+(m.cost||0),0);}
 
   // ── Totals across all floors ──
