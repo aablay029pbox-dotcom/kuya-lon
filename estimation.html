@@ -367,8 +367,8 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
   <div class="card">
     <div class="card-title"><span class="ct-icon">P</span> Project Details</div>
     <div class="field">
-      <label>Project Name</label>
-      <input type="text" id="projName" placeholder="e.g. My New House">
+      <label>Project Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="projName" placeholder="e.g. My New House" required>
     </div>
     <div class="field">
       <label>Building Type</label>
@@ -868,6 +868,15 @@ function validateStep(s){
     if(!selectedSupplier){alert('Please select a supplier to use their material prices.');return false;}
   }
   if(s===1){
+    const projName=document.getElementById('projName').value.trim();
+    if(!projName){
+      const inp=document.getElementById('projName');
+      inp.style.borderColor='var(--red)';
+      inp.focus();
+      inp.addEventListener('input',()=>{inp.style.borderColor='';},{ once:true });
+      alert('Please enter a project name.');
+      return false;
+    }
     if(floors.length>0){
       const incompletFloor=floors.find(f=>!f.length||!f.width);
       if(incompletFloor){alert('Please enter length and width for '+incompletFloor.label+'.');return false;}
