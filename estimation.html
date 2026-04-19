@@ -485,9 +485,9 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
       <div id="rSupplierTag" style="display:none;margin-top:8px;background:rgba(255,255,255,0.12);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600"><span id="rSupplierName"></span></div>
     </div>
     <div class="result-chips">
-      <div class="chip-r"><div class="cv" id="rCement">0</div><div class="cl">Cement bags</div></div>
-      <div class="chip-r"><div class="cv" id="rSand">0</div><div class="cl">Sand m³</div></div>
-      <div class="chip-r"><div class="cv" id="rGravel">0</div><div class="cl">Gravel m³</div></div>
+      <div class="chip-r"><div class="cv" id="rCement">0</div><div class="cl">Total Cement (bags)</div></div>
+      <div class="chip-r"><div class="cv" id="rSand">0</div><div class="cl">Total Sand (m³)</div></div>
+      <div class="chip-r"><div class="cv" id="rGravel">0</div><div class="cl">Total Gravel (m³)</div></div>
     </div>
     <div id="floorBreakdowns"></div>
 
@@ -1178,11 +1178,16 @@ function calculate(){
   }
 
   const grandMaterialCost=cost1+cost2+cost3+cost4+customMatCost;
-  
-  // Calculate total cement bags from sec1Mats (includes ground floor + additional slabs)
-  const totalCementBags=sec1Mats.reduce((sum,m)=>sum+(m.name.includes('Cement')?m.qty:0),0);
-  const totalSand=+(totalConcreteVol*0.5).toFixed(2);
-  const totalGravel=+(totalConcreteVol*1.0).toFixed(2);
+
+  // Aggregate actual totals across ALL sections for summary chips
+  const allMatSections=[...sec1Mats,...sec2Mats,...sec3Mats,...sec4Mats];
+  function sumMat(list,keyFn){return list.filter(m=>!m.isHeader).reduce((s,m)=>s+(keyFn(m)?m.qty:0),0);}
+  const isCement=m=>/(cement)/i.test(m.name);
+  const isSand=m=>/(^sand|^fine sand|^washed sand|^river sand)/i.test(m.name)||(/sand/i.test(m.name)&&!/cement/i.test(m.name)&&m.unit==='m³');
+  const isGravel=m=>/(gravel|aggregate|crushed stone)/i.test(m.name);
+  const totalCementBags=Math.round(sumMat(allMatSections,isCement));
+  const totalSand=+sumMat(allMatSections,isSand).toFixed(2);
+  const totalGravel=+sumMat(allMatSections,isGravel).toFixed(2);
 
   // Floor area sub-labels
   const floorLabels=floors.map(f=>`${f.label}: ${(f.length*f.width).toFixed(1)} m²`).join(' · ')||'No floors added';
