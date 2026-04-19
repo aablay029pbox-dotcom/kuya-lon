@@ -209,25 +209,7 @@ select:focus{border-color:var(--g600)}
   }
 
   // ---- Auth / session ----
-  async function loadCurrentUser() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
-
-    const user = session.user;
-    // Pull profile from `profiles` table (name, role). Falls back to metadata.
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: profile?.name || user.user_metadata?.name || user.email,
-      role: profile?.role || user.user_metadata?.role || 'buyer'
-    };
-  }
+  
 
   async function doLogout() {
     if (!confirm('Logout?')) return;
