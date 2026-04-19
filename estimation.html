@@ -1005,6 +1005,14 @@ function calculate(){
     if(inclRoof&&idx===floors.length-1){totalGiSheets+=Math.ceil((area*1.2)/2.5);totalLumber+=Math.ceil(area/2);}
   });
   
+  // Add the top-level Slab dimension inputs (sLength/sWidth/sThick) even if no additional slabs added
+  const slabDimL=parseFloat(document.getElementById('sLength').value)||0;
+  const slabDimW=parseFloat(document.getElementById('sWidth').value)||0;
+  const slabDimT=parseFloat(document.getElementById('sThick').value)||0;
+  if(slabDimL>0 && slabDimW>0 && slabDimT>0){
+    additionalSlabsVol+=slabDimL*slabDimW*slabDimT;
+  }
+
   // Add volumes from additional slabs (tracked separately)
   slabEntries.forEach(s=>{
     const vol=(s.length||0)*(s.width||0)*(s.thickness||0);
@@ -1049,7 +1057,7 @@ function calculate(){
   // SECTION 1: SLAB (Cement, Steel, Nails, Wire)
   // ────────────────────────────────────────────
   const sec1Mats=[];
-  if(totalArea>0){
+  if(totalArea>0 || additionalSlabsVol>0){
     // Additional slabs (user-added slabs beyond the ground floor)
     if(additionalSlabsVol>0){
       const additionalSlabsCementBags=Math.ceil(additionalSlabsVol*9.0);
@@ -1225,9 +1233,10 @@ function calculate(){
     </div>`;
   }
 
+  const slabDisplayArea = totalArea>0 ? totalArea : (slabDimL*slabDimW>0 ? slabDimL*slabDimW : 0);
   const breakdownHTML=
     catBlock('','GROUND FLOOR SLAB',fSec2.length?`(${fSec2.length} item${fSec2.length>1?'s':''} from supplier)`:'(supplier items only)',fSec2,cost2)+
-    catBlock('','SLAB',totalArea>0?`(${totalArea.toFixed(1)} m\u00B2)`:'',fSec1,cost1)+
+    catBlock('','SLAB',slabDisplayArea>0?`(${slabDisplayArea.toFixed(1)} m\u00B2)`:'',fSec1,cost1)+
     catBlock('','STRUCTURAL ELEMENTS',totalColCount||totalBeamCount?`(${totalColCount} col \u00B7 ${totalBeamCount} beams)`:'',fSec3,cost3)+
     catBlock('','WALLS AND FINISHES',wallSummary.length?`(${wallSummary.length} section${wallSummary.length>1?'s':''})`:'',fSec4,cost4,matRowsHierarchy)+
     customMatHTML;
