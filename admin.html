@@ -463,6 +463,8 @@ async function addMaterial() {
   if (error) { alert('Failed to add material: ' + error.message); return; }
 
   await loadMaterials();
+  renderMatTable();
+  renderRecent();
   alert(`"${name}" added to your catalog.`);
   document.getElementById('mName').value = '';
   document.getElementById('mPrice').value = '';
