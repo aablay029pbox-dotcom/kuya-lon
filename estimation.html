@@ -1381,18 +1381,15 @@ function renderSupplierCards(){
     const metaBits=[s.location,s.category].filter(Boolean);
     const metaHTML=metaBits.map((b,j)=>j===0?escapeHtml(b):`<span class="sup-card-meta-dot"></span>${escapeHtml(b)}`).join('');
 
-    // Show the supplier's actual materials when selected
+    // Show only a compact summary badge when selected (no item list)
     let matListHTML='';
     if(isSel){
       if(supplierMats.length){
-        matListHTML=`<div class="sup-mat-list">${supplierMats.map(m=>`
-          <div class="sup-mat-row">
-            <span class="mn">${escapeHtml(m.name)} <span style="color:var(--ink3);font-weight:400">(per ${escapeHtml(m.unit)})</span></span>
-            <span class="mp">&#8369;${parseFloat(m.price).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-          </div>`).join('')}</div>
-          <span class="sup-mat-count">${supplierMats.length} material${supplierMats.length>1?'s':''} in catalog</span>`;
+        matListHTML=`<div style="padding-top:8px;border-top:1px solid var(--border);margin-top:6px">
+          <span class="sup-mat-count">${supplierMats.length} material${supplierMats.length>1?'s':''} in catalog</span>
+        </div>`;
       } else {
-        matListHTML=`<div style="font-size:12px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--border);margin-top:6px;font-style:italic">This supplier has no materials in their catalog yet.</div>`;
+        matListHTML=`<div style="font-size:12px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--border);margin-top:6px;font-style:italic">No materials in catalog yet.</div>`;
       }
     }
 
