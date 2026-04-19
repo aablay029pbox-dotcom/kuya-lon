@@ -221,7 +221,6 @@ async function doLogin(e) {
 // ---------- REGISTER ----------
 async function doRegister(e) {
   e.preventDefault();
-
   const name = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const contact = document.getElementById('regContact').value.trim();
@@ -232,52 +231,18 @@ async function doRegister(e) {
 
   if (!name || !email || !contact || !address || !pw || !pwConfirm)
     return showAlert('regAlert', 'Please fill all fields.', 'error');
-
   if (pw.length < 6)
     return showAlert('regAlert', 'Password must be at least 6 characters.', 'error');
-
   if (pw !== pwConfirm)
-    return showAlert('regAlert', 'Passwords do not match.', 'error');
+    return showAlert('regAlert', 'Passwords do not match. Please try again.', 'error');
 
-  let storeName = null, cat = null, loc = null;
-
+  let storeName, cat, loc;
   if (role === 'supplier') {
     storeName = document.getElementById('storeName').value.trim();
     cat = document.getElementById('storeCategory').value;
     loc = document.getElementById('storeLoc').value;
-
-    if (!storeName)
-      return showAlert('regAlert', 'Please enter your business name.', 'error');
+    if (!storeName) return showAlert('regAlert', 'Please enter your business name.', 'error');
   }
-
-  // ✅ ONLY SIGN UP (no manual inserts)
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password: pw,
-    options: {
-      data: {
-        name,
-        role,
-        contact,
-        address,
-        store_name: storeName,
-        category: cat,
-        location: loc
-      }
-    }
-  });
-
-  if (error) {
-    return showAlert('regAlert', error.message, 'error');
-  }
-
-  showAlert('regAlert', 'Account created! Please login.', 'success');
-
-  setTimeout(() => {
-    switchPanel('panelLogin');
-    document.getElementById('loginEmail').value = email;
-  }, 1500);
-}
 
   // 1. Sign up with Supabase Auth
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
