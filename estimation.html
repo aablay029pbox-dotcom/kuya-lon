@@ -473,9 +473,7 @@ main{padding:16px 16px 100px;max-width:600px;margin:0 auto}
     <p>Click <strong>Calculate</strong> to view results</p>
   </div>
   <div id="resultsContent" style="display:none">
-    <div id="zeroNotice" style="display:none;background:#fffbea;border:1px solid #f6e05e;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#744210">
-      <strong>No materials matched from this supplier.</strong> The supplier hasn't added materials that match the required categories yet. Ask them to add materials to their catalog, or select a different supplier.
-    </div>
+
     <div class="result-hero">
       <div class="big-label">Total Project Cost</div>
       <div class="big-amount" id="rTotal">₱0</div>
@@ -924,10 +922,9 @@ function calculate(){
     }).join('');
   }
   
-  // Only show items that the selected supplier actually carries
-  function filtered(list){
-    return list.filter(m=>!m.field||supplierAvailMap[m.field]===true);
-  }
+  // Always show all calculated items.
+  // supplierAvailMap only controls which PRICE was used (supplier price vs default).
+  function filtered(list){ return list; }
   function catCost(list){return list.reduce((s,m)=>s+(m.cost||0),0);}
 
   // ── Totals across all floors ──
@@ -1140,7 +1137,7 @@ function calculate(){
         <span>₱${fmt(cost)}</span>
       </div>
       <div class="floor-result-body">
-        ${matList.length?rfn(matList):'<div style="font-size:12px;color:var(--ink3);padding:6px 0;font-style:italic">No matching materials from this supplier. Add the relevant materials to their catalog first.</div>'}
+        ${matList.length?rfn(matList):'<div style="font-size:12px;color:var(--ink3);padding:6px 0;font-style:italic">No items to display. Add floors, columns, walls, or other elements in Step 2.</div>'}
       </div>
     </div>`;
   }
@@ -1157,9 +1154,7 @@ function calculate(){
   const setHTML=(id,val)=>{const el=document.getElementById(id);if(el)el.innerHTML=val;};
 
   setText('rTotal','₱'+fmt(grandMaterialCost));
-  // Show notice if total is 0 (supplier has no matching materials)
-  const zeroNotice = document.getElementById('zeroNotice');
-  if(zeroNotice) zeroNotice.style.display = grandMaterialCost===0 ? 'block' : 'none';
+
   const projNameEl=document.getElementById('projName');
   setText('rProjName',(projNameEl&&projNameEl.value)||'Untitled Project');
   const _results=document.getElementById('resultsContent');
