@@ -154,6 +154,8 @@ nav ul a:hover{color:#fff}
 .sup-card{background:var(--card);border-radius:var(--r);padding:20px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;transition:.3s;opacity:0;transform:translateY(20px)}
 .sup-card.show{opacity:1;transform:translateY(0)}
 .sup-card:hover{border-color:var(--g200);box-shadow:var(--shadow)}
+a.sup-card{text-decoration:none;color:inherit}
+.sup-empty{grid-column:1/-1;text-align:center;padding:30px 20px;color:var(--ink3);font-size:14px}
 .sup-avatar{width:44px;height:44px;border-radius:10px;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--g700);flex-shrink:0;border:1px solid var(--g100);letter-spacing:.5px}
 .sup-name{font-size:14px;font-weight:600;color:var(--g800)}
 .sup-loc{font-size:12px;color:var(--ink3);margin-top:2px}
@@ -348,11 +350,8 @@ updated prices.</p>
   <div class="sec-tag">Suppliers</div>
   <h2 class="sec-title">Featured Suppliers</h2>
   <p class="sec-sub">Trusted construction material suppliers serving the Partido Area.</p>
-  <div class="sup-grid">
-    <div class="sup-card"><div class="sup-avatar">HW</div><div><div class="sup-name">Tigaon Hardware Center</div><div class="sup-loc">Tigaon</div></div></div>
-    <div class="sup-card"><div class="sup-avatar">GC</div><div><div class="sup-name">Goa Construction Supply</div><div class="sup-loc">Goa</div></div></div>
-    <div class="sup-card"><div class="sup-avatar">LB</div><div><div class="sup-name">San Jose Lumber</div><div class="sup-loc">San Jose</div></div></div>
-    <div class="sup-card"><div class="sup-avatar">BL</div><div><div class="sup-name">Lagonoy Builders</div><div class="sup-loc">Lagonoy</div></div></div>
+  <div class="sup-grid" id="supGrid">
+    <div style="grid-column:1/-1;text-align:center;padding:30px 20px;color:var(--ink3);font-size:14px">Loading suppliers...</div>
   </div>
 </div>
 
@@ -373,7 +372,7 @@ quantity and cost estimation capabilities.</p>
 </footer>
 
 <script type="module">
-import { supabase, getCurrentUser, signOutAndGo } from './supabase-client.js';
+import { supabase, getCurrentUser, signOutAndGo, escapeHtml } from './supabase-client.js';
 
 let currentUser = null;
 
@@ -400,6 +399,71 @@ async function init() {
     document.querySelector('nav').classList.add('guest-nav');
     document.querySelector('.logo').classList.add('logo-center');
   }
+
+  // Load featured suppliers on the homepage
+  loadFeaturedSuppliers();
+}
+
+// ---------- FEATURED SUPPLIERS ----------
+const SUP_ICONS = { hardware:'HW', lumber:'LB', construction:'GC', cement:'CA' };
+
+function supInitials(name) {
+  const n = (name || '').trim();
+  if (!n) return '??';
+  const parts = n.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+async function loadFeaturedSuppliers() {
+  const grid = document.getElementById('supGrid');
+  if (!grid) return;
+
+  const { data, error } = await supabase
+    .from('suppliers')
+    .select('id, email, name, category, location')
+    .order('created_at', { ascending: false })
+    .limit(8);
+
+  if (error) {
+    console.error('loadFeaturedSuppliers:', error);
+    grid.innerHTML = `<div class="sup-empty">Could not load suppliers right now.</div>`;
+    return;
+  }
+
+  renderFeaturedSuppliers(data || []);
+
+  // Realtime: auto-refresh when a supplier registers / updates / deletes
+  supabase
+    .channel('home-suppliers')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, async () => {
+      const { data: fresh } = await supabase
+        .from('suppliers')
+        .select('id, email, name, category, location')
+        .order('created_at', { ascending: false })
+        .limit(8);
+      renderFeaturedSuppliers(fresh || []);
+    })
+    .subscribe();
+}
+
+function renderFeaturedSuppliers(list) {
+  const grid = document.getElementById('supGrid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="sup-empty">No registered suppliers yet. Be the first to <a href="login.html" style="color:var(--g600);font-weight:600">sign up</a>.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(s => {
+    const avatar = SUP_ICONS[s.category] || supInitials(s.name);
+    const href = `catalog.html?email=${encodeURIComponent(s.email || '')}`;
+    return `<a href="${href}" class="sup-card show">
+      <div class="sup-avatar">${escapeHtml(avatar)}</div>
+      <div>
+        <div class="sup-name">${escapeHtml(s.name || 'Unnamed supplier')}</div>
+        <div class="sup-loc">${escapeHtml(s.location || '—')}</div>
+      </div>
+    </a>`;
+  }).join('');
 }
 
 function checkAuth(url) {
