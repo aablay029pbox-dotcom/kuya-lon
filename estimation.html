@@ -965,8 +965,9 @@ function calculate(){
   });
   
   // Add volumes from additional slabs (tracked separately)
+  // Apply 1.2 waste/contingency factor (standard allowance for concrete works)
   slabEntries.forEach(s=>{
-    const vol=(s.length||0)*(s.width||0)*(s.thickness||0);
+    const vol=(s.length||0)*(s.width||0)*(s.thickness||0)*1.2;
     additionalSlabsVol+=vol;
   });
   
